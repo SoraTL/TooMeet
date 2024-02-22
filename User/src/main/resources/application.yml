@@ -2,7 +2,7 @@ server:
     port: ${PORT:8082}
 spring:
     redis:
-        uri: ${REDIS_URL:redis://default:434H3LeG424DOFKGnJ3aDLdnF3bk4O6L@viaduct.proxy.rlwy.net:54722}
+        uri: ${REDIS_URL:redis://default:4njL1mNaNe6Gkepf2gl3cLfna2CHGNDf@viaduct.proxy.rlwy.net:40203}
     application:
         name: user-service
     jpa:
@@ -14,15 +14,15 @@ spring:
             hibernate:
                 format_sql: true
     datasource:
-        url: ${DB_HOST:jdbc:postgresql://roundhouse.proxy.rlwy.net:13661/railway}
+        url: ${DB_HOST:jdbc:postgresql://monorail.proxy.rlwy.net:38429/railway}
         driver-class-name: org.postgresql.Driver
         username: ${DB_USER:postgres}
-        password: ${DB_PASSWORD:2DE*32C2-1634-DG1-be6bc-Ff6FFef3}
+        password: ${DB_PASSWORD:f512DA3E43-cGFE3fbbdb2B5-5BdceaE}
     mail:
-        host: ${MAIL_HOST:sandbox.smtp.mailtrap.io}
-        username: ${MAIL_USER:1a4d5226bf071f}
-        password: ${MAIL_PASSWORD:60dd54a0512e1c}
-        port: ${MAIL_PORT:2525}
+        host: ${MAIL_HOST:smtp.gmail.com}
+        username: ${MAIL_USER:pikapi.anony@gmail.com}
+        password: ${MAIL_PASSWORD:sehnwhibxlzjuezp}
+        port: ${MAIL_PORT:587}
         properties:
             mail:
                 smtp:
@@ -41,10 +41,10 @@ management:
         health:
             show-details: always
 
-eureka:
-    client:
-        service-url:
-            defaultZone: ${DISCOVERY_URL:https://discovery-aoyd.onrender.com/eureka}
-    instance:
-#    prefer-ip-address: true
+#eureka:
+#    client:
+#        service-url:
+#            defaultZone: ${DISCOVERY_URL:https://discovery-aoyd.onrender.com/eureka}
+#    instance:
+##    prefer-ip-address: true
 

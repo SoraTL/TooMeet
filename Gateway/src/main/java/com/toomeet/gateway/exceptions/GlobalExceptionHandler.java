@@ -1,15 +1,16 @@
-package com.toomeet.user.exceptions;
+package com.toomeet.gateway.exceptions;
 
 
-import jakarta.servlet.ServletException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MethodArgumentNotValidException.class})
     public ResponseEntity<ErrorResponse> methodArgumentNotValidExceptionHandler(MethodArgumentNotValidException exception) {
         logException(exception);
-
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
 
         Map<String, String> invalidMessage = new HashMap<>();
@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, badRequest);
     }
 
-    @ExceptionHandler({CustomException.class, ServletException.class, IOException.class})
+    @ExceptionHandler({CustomException.class})
     public ResponseEntity<ErrorResponse> customExceptionHandler(CustomException exception) {
         logException(exception);
 
@@ -64,7 +64,7 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .message("ERROR::INTERNAL_SERVER_ERROR: " + exception.getMessage())
+                .message("ERROR::::::INTERNAL_SERVER_ERROR")
                 .status(status)
                 .build();
 
@@ -72,10 +72,49 @@ public class GlobalExceptionHandler {
     }
 
 
-    private void logException(Exception e) {
-        log.error(e.getMessage());
+    @ExceptionHandler({JwtException.class})
+    public ResponseEntity<ErrorResponse> jwtExceptionHandler(JwtException exception) {
+        logException(exception);
 
+        HttpStatus status = HttpStatus.FORBIDDEN;
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message("TOKEN_ERROR: " + exception.getMessage())
+                .status(status)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, status);
     }
 
+    @ExceptionHandler(WebClientResponseException.class)
+    public ResponseEntity<ErrorResponse> decodeExceptionHandler(WebClientResponseException exception) {
+        logException(exception);
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message("MICROSERVICE_ERROR: " + exception.toString())
+                .status(status)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, status);
+    }
+
+    @ExceptionHandler({SignatureException.class})
+    public ResponseEntity<ErrorResponse> JwtException(SignatureException exception) {
+        logException(exception);
+        HttpStatus status = HttpStatus.FORBIDDEN;
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message("TOKEN_ERROR: " + exception)
+                .status(status)
+                .build();
+
+        return new ResponseEntity<>(errorResponse, status);
+    }
+
+    private void logException(Exception e) {
+//        log.error(e.toString());
+        log.error(e.getMessage());
+//        e.printStackTrace();
+    }
 
 }

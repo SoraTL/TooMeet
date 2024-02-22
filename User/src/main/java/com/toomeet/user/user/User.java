@@ -38,6 +38,10 @@ public class User implements UserDetails {
     @Builder.Default
     private boolean is2FA = false;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private Status status = Status.ONLINE;
+
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL)
     private List<UserRole> roles;
 

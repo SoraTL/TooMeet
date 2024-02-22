@@ -1,0 +1,44 @@
+server:
+  port: ${PORT:8080}
+spring:
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: '*'
+            allowedHeaders: '*'
+            allowedMethods:
+              - GET
+              - POST
+              - PATCH
+              - DELETE
+      routes:
+        #============================  Auth ============================#
+        - id: auth-route
+          uri: ${AUTH_ROUTE:http://localhost:8082}
+          predicates:
+            - Path=/v1/auth/**
+          filters:
+            - RemoveSpecifiedHeader
+            - StripPrefix=1
+        #============================  User ============================#
+        - id: user-route
+          uri: ${USER_ROUTE:http://localhost:8082}
+          predicates:
+            - Path=/v1/users/**
+          filters:
+            - RemoveSpecifiedHeader
+            - AuthenticationFilter
+            - StripPrefix=1
+        #============================  Socket ============================#
+        - id: socket-route
+          uri: ${SOCKET_ROUTE:http://localhost:8081}
+          predicates:
+            - Path=/v1/ws/**
+          filters:
+            - StripPrefix=1
+
+
+jwt:
+  secret: ${TOKEN_SECRET:KqLaJQJXIfarUZFJ39BfpcWw9vyx9VMOd5SSLDIsu9ajKavYop96uOez20yCDrucd/s=}
