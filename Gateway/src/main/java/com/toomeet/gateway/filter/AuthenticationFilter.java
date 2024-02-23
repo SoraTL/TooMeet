@@ -54,8 +54,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             }
 
             String userId = jwtService.extractUserId(token);
+            String accountId = jwtService.extractAccountId(token);
+            String userEmail = jwtService.extractUserEmail(token);
 
             exchange.getRequest().mutate().header("x-user-id", userId).build();
+            exchange.getRequest().mutate().header("x-account-id", accountId).build();
+            exchange.getRequest().mutate().header("x-user-email", userEmail).build();
 
 
             return chain.filter(exchange);

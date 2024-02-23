@@ -1,13 +1,12 @@
 package com.toomeet.user.auth.dto;
 
-import com.toomeet.user.user.dto.UserResponseDto;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class UserAuthenticatedResponseDto {
-    private UserResponseDto user;
+public class AuthenticatedResponseDto {
+    private AccountResponseDto account;
     private String token;
     private Long expireIn;
     @Builder.Default

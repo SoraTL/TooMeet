@@ -9,25 +9,19 @@ import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
-@Entity
 @Data
+@Builder
+@Embeddable
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class Profile {
-
-
-    @OneToOne
-    User user;
-    @Id
-    @GeneratedValue
-    private Long id;
     private Date dateOfBirth;
     private String description;
-    @OneToOne(mappedBy = "profile", cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Image background;
-    @OneToOne(mappedBy = "profile", cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Image avatar;
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
 }

@@ -1,5 +1,8 @@
 package com.toomeet.user.filter;
 
+import com.toomeet.user.auth.Account;
+import com.toomeet.user.auth.AccountService;
+import com.toomeet.user.exceptions.NotFoundException;
 import com.toomeet.user.user.User;
 import com.toomeet.user.user.UserService;
 import jakarta.servlet.FilterChain;
@@ -20,6 +23,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class SecurityFilter extends OncePerRequestFilter {
 
+    private final AccountService accountService;
     private final UserService userService;
 
     @Override
@@ -29,23 +33,29 @@ public class SecurityFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        String userHeader = request.getHeader("x-user-id");
+        String userIdHeader = request.getHeader("x-user-id");
+        String accountIdHeader = request.getHeader("x-account-id");
+        String userEmailHeader = request.getHeader("x-user-email");
 
-        if (userHeader == null) {
+        if (userIdHeader == null || accountIdHeader == null || userEmailHeader == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
 
         try {
-            Long userId = Long.parseLong(userHeader);
-
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                Long userId = Long.parseLong(userIdHeader);
+
                 User user = userService.getUserById(userId);
+
+                Account account = accountService.getAccountById(accountIdHeader).orElseThrow(
+                        () -> new NotFoundException("Account not found")
+                );
 
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
 
-                UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user, null, account.getAuthorities());
 
                 securityContext.setAuthentication(token);
                 SecurityContextHolder.setContext(securityContext);

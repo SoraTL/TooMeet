@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -19,12 +20,27 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public String extractUserId(String token) {
-        return extractClaims(token, Claims::getSubject);
+        return extractClaims(token, (claims -> claims.get("sub").toString()));
+    }
+
+    @Override
+    public String extractAccountId(String token) {
+        return extractClaims(token, (claims -> claims.get("account_id").toString()));
+    }
+
+    @Override
+    public String extractUserEmail(String token) {
+        return extractClaims(token, (claims -> claims.get("email").toString()));
     }
 
     @Override
     public boolean isTokenExpired(String token) {
-        return extractClaims(token, Claims::getExpiration).before(new Date());
+        return extractClaims(token, claims -> {
+            long exp = Long.parseLong(claims.get("exp").toString());
+            Instant instant = Instant.ofEpochSecond(exp);
+            return Date.from(instant);
+        }).before(new Date());
+
     }
 
     @Override

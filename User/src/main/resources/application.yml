@@ -1,45 +1,51 @@
 server:
-    port: ${PORT:8082}
+  port: ${PORT:8082}
 spring:
-    redis:
-        uri: ${REDIS_URL:redis://default:4njL1mNaNe6Gkepf2gl3cLfna2CHGNDf@viaduct.proxy.rlwy.net:40203}
-    application:
-        name: user-service
-    jpa:
-        database: postgresql
-        show-sql: true
-        hibernate:
-            ddl-auto: create
-        properties:
-            hibernate:
-                format_sql: true
-    datasource:
-        url: ${DB_HOST:jdbc:postgresql://monorail.proxy.rlwy.net:38429/railway}
-        driver-class-name: org.postgresql.Driver
-        username: ${DB_USER:postgres}
-        password: ${DB_PASSWORD:f512DA3E43-cGFE3fbbdb2B5-5BdceaE}
-    mail:
-        host: ${MAIL_HOST:smtp.gmail.com}
-        username: ${MAIL_USER:pikapi.anony@gmail.com}
-        password: ${MAIL_PASSWORD:sehnwhibxlzjuezp}
-        port: ${MAIL_PORT:587}
-        properties:
-            mail:
-                smtp:
-                    auth: true
-                    starttls:
-                        enable: true
+  rabbitmq:
+    host: ${RABBIT_HOST:albatross.rmq.cloudamqp.com}
+    port: ${RABBIT_PORT:5672}
+    username: ${RABBIT_USERNAME:fmochalo}
+    password: ${RABBIT_PASSWORD:329AQ6myicnp6iaqzRVYnEvJFFmDo5Jj}
+    virtual-host: ${RABBIT_VHOST:fmochalo}
+  redis:
+    uri: ${REDIS_URL:redis://default:JPhjhb6IILH52pdc2d3gKH2FhPjg3p5F@roundhouse.proxy.rlwy.net:51667}
+  application:
+    name: user-service
+  jpa:
+    database: postgresql
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: ${DB_HOST:jdbc:postgresql://viaduct.proxy.rlwy.net:52605/railway}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:AeaG2*ecc*A4F3aF*3E13dG6E1344GgE}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    username: ${MAIL_USER:pikapi.anony@gmail.com}
+    password: ${MAIL_PASSWORD:sehnwhibxlzjuezp}
+    port: ${MAIL_PORT:587}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
-    secret_key: ${TOKEN_SECRET_KEY:KqLaJQJXIfarUZFJ39BfpcWw9vyx9VMOd5SSLDIsu9ajKavYop96uOez20yCDrucd/s=}
-    expired_time: ${TOKEN_EXPIRED_TIME:7200000 } # 2 hours
+  secret_key: ${TOKEN_SECRET_KEY:KqLaJQJXIfarUZFJ39BfpcWw9vyx9VMOd5SSLDIsu9ajKavYop96uOez20yCDrucd/s=}
+  expired_time: ${TOKEN_EXPIRED_TIME:7200000 } # 2 hours
 otp:
-    expired_time: ${OTP_EXPIRED_TIME:300000}
+  expired_time: ${OTP_EXPIRED_TIME:300000}
 
 management:
-    endpoint:
-        health:
-            show-details: always
+  endpoint:
+    health:
+      show-details: always
 
 #eureka:
 #    client:

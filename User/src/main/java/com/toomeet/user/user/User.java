@@ -1,6 +1,8 @@
 package com.toomeet.user.user;
 
 
+import com.toomeet.user.auth.Account;
+import com.toomeet.user.friend.FriendRequest;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,11 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -22,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class User implements UserDetails {
+public class User {
     @Id
     @GeneratedValue
     private Long id;
@@ -30,23 +28,22 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false)
-    private String email;
-
-    private String password;
-
-    @Builder.Default
-    private boolean is2FA = false;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private Status status = Status.ONLINE;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = CascadeType.ALL)
-    private List<UserRole> roles;
-
-    @OneToOne(cascade = CascadeType.ALL)
+    @Embedded
     private Profile profile;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    private Account account;
+
+    @OneToMany(mappedBy = "sender", fetch = FetchType.LAZY)
+    private List<FriendRequest> sentFriendRequests;
+
+    @OneToMany(mappedBy = "receiver", fetch = FetchType.LAZY)
+    private List<FriendRequest> receivedFriendRequests;
 
     @CreationTimestamp
     private Date createdAt;
@@ -56,38 +53,15 @@ public class User implements UserDetails {
 
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-
-        return this.roles
-                .stream()
-                .map(
-                        role -> new SimpleGrantedAuthority("ROLE_" + role)
-                ).toList();
-    }
-
-    @Override
-    public String getUsername() {
-        return this.name;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", status=" + status +
+                ", profile=" + profile +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                '}';
     }
 }
 

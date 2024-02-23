@@ -1,7 +1,7 @@
 package com.toomeet.user.jwt;
 
 import com.google.gson.Gson;
-import com.toomeet.user.user.User;
+import com.toomeet.user.auth.Account;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -35,17 +35,27 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public String generateToken(User user) {
+    public String generateToken(Account account) {
 
         Date now = new Date(System.currentTimeMillis());
         Date expiredTime = new Date(System.currentTimeMillis() + this.expiredTime);
 
+        Claims claims = Jwts.claims();
+
+        String subject = account.getUser().getId().toString();
+
+        claims.put("account_id", account.getId());
+        claims.put("email", account.getEmail());
+        claims.put("user_id", subject);
+        claims.put("sub", subject);
+        claims.put("iat", now.getTime());
+        claims.put("exp", expiredTime);
+        claims.put("iss", "toomeet-toomeet-toomeet");
+
 
         return Jwts
                 .builder()
-                .setIssuedAt(now)
-                .setExpiration(expiredTime)
-                .setSubject(user.getId().toString())
+                .setClaims(claims)
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }

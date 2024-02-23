@@ -11,6 +11,6 @@ public class ProfileResponseDto {
     private String description;
     private ImageResponseDto background;
     private ImageResponseDto avatar;
-    private Date dateOfBirth;
     private Gender gender;
+    private Date dateOfBirth;
 }

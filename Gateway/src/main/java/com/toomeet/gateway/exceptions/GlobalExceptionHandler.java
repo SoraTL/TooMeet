@@ -114,7 +114,7 @@ public class GlobalExceptionHandler {
     private void logException(Exception e) {
 //        log.error(e.toString());
         log.error(e.getMessage());
-//        e.printStackTrace();
+        e.printStackTrace();
     }
 
 }

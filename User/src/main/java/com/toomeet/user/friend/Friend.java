@@ -1,7 +1,10 @@
-package com.toomeet.user.image;
+package com.toomeet.user.friend;
 
 import com.toomeet.user.user.User;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,29 +15,23 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.util.Date;
 
 @Entity
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 @Builder
-public class Image {
+public class Friend {
     @Id
     @GeneratedValue
     private Long id;
 
-    @Column(nullable = false)
-    private String url;
+    @ManyToOne
+    private User user1;
 
-    private String cloudPublicId;
-
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Format format;
-
-    @OneToOne
-    private User profile;
-
+    @ManyToOne
+    private User user2;
+    
     @CreationTimestamp
-    private Date createAt;
+    private Date createdAt;
 
     @UpdateTimestamp
     private Date updatedAt;

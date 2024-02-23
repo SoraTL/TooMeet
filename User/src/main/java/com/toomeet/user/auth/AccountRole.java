@@ -1,6 +1,5 @@
-package com.toomeet.user.image;
+package com.toomeet.user.auth;
 
-import com.toomeet.user.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,32 +10,38 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.util.Date;
 
+
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Image {
+public class AccountRole {
     @Id
     @GeneratedValue
     private Long id;
 
-    @Column(nullable = false)
-    private String url;
-
-    private String cloudPublicId;
-
-    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private Format format;
+    @Column()
+    private Role role;
 
-    @OneToOne
-    private User profile;
+    @ManyToOne
+    private Account account;
 
     @CreationTimestamp
-    private Date createAt;
+    private Date createdAt;
 
     @UpdateTimestamp
     private Date updatedAt;
 
+    @Override
+    public String toString() {
+        return role.name();
+    }
+
+    public static enum Role {
+        NORMAL_USER,
+        PREMIUM,
+        ADMIN
+    }
 }
