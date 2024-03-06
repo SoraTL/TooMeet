@@ -33,8 +33,8 @@ public class PostService {
     private PostResponse convertToResponse(Post post) {
         PostResponse postResponse = new PostResponse();
         postResponse.setId(post.getId());
-        postResponse.setName("Bard");
-        postResponse.setAvatar("https://avatars.google.com/static/images/1.jpg");
+        postResponse.getAuthor().setName("Bard");
+        postResponse.getAuthor().setAvatar("https://avatars.google.com/static/images/1.jpg");
         postResponse.getAuthor().setId(1);
         postResponse.setContent(post.getContent());
         postResponse.setPrivacy(post.getPrivacy());

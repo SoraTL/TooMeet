@@ -13,9 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PostResponse {
     private UUID id;
-    private String avatar;
     private AuthorDto author = new AuthorDto();
-    private String name;
     private String content;
     private List<String> imageUrl;
     private int privacy;
