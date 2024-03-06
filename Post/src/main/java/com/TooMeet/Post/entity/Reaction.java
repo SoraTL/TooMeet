@@ -20,11 +20,18 @@ public class Reaction {
     private UUID id;
 
     private Long userId;
-    private UUID postId;
     private int type;
     @CreationTimestamp
     private Timestamp createdAt;
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
+    public void setPost(Post post) {
+        this.post = post;
+    }
+
 
 }

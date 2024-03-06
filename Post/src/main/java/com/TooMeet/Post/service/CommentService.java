@@ -5,6 +5,8 @@ import com.TooMeet.Post.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class CommentService {
 
@@ -19,6 +21,10 @@ public class CommentService {
         else {
             return commentRepository.save(comment);
         }
+    }
+
+    public Comment getCommentByParentId(UUID parentId){
+        return commentRepository.findByParentId(parentId);
     }
 
 }

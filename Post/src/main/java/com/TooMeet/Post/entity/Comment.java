@@ -19,15 +19,21 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    private UUID parentId;
     private Long userId;
-    private UUID postId;
-    private Long parentId;
-    private String comment;
+    private String content;
     private int likeCount = 0;
     private int level = 0;
     @CreationTimestamp
     private Timestamp createdAt;
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
+    public void setPost(Post post) {
+        this.post = post;
+    }
 
 }

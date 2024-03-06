@@ -1,24 +1,23 @@
 package com.TooMeet.Post.controller;
 
 
+import com.TooMeet.Post.entity.Comment;
 import com.TooMeet.Post.entity.Post;
-import com.TooMeet.Post.entity.Reaction;
 import com.TooMeet.Post.repository.PostRepository;
-import com.TooMeet.Post.resposn.Response;
+import com.TooMeet.Post.resposn.PostResponse;
 import com.TooMeet.Post.service.CommentService;
 import com.TooMeet.Post.service.ImageUpload;
 import com.TooMeet.Post.service.PostService;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -40,46 +39,57 @@ public class PostController {
 
     @PostMapping("")
     public ResponseEntity<Post> newPost(@RequestHeader(value = "x-user-id", required = false) Long userId,
-                        @RequestParam("content") String content,
-                        @RequestParam(value = "images" ,required = false) List<MultipartFile> images,
-                        @RequestParam("privacy") int privacy,
-                        @RequestParam(value = "groupId", required = false) Long groupId) throws IOException {
-        if(userId != null){
+                                        @RequestParam("content") String content,
+                                        @RequestParam(value = "images", required = false) List<MultipartFile> images,
+                                        @RequestParam("privacy") int privacy,
+                                        @RequestParam(value = "groupId", required = false) Long groupId) {
+        try {
+            if (userId == null) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
+            if (content == null || content.isEmpty() || privacy < 0 || privacy > 2) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+
             Post post = new Post();
             post.setContent(content);
-            post.setImages(new ArrayList<>());
             post.setPrivacy(privacy);
             post.setAuthorId(userId);
-            if (!images.isEmpty()){
-            List<String> imageUrls = new ArrayList<>();
+            if (images!=null && !images.get(0).isEmpty()) {
+                List<String> imageUrls = new ArrayList<>();
                 for (MultipartFile image : images) {
                     try {
                         String imageUrl = imageUpload.uploadImage(image);
-                        post.getImages().add(imageUrl);
+                        imageUrls.add(imageUrl);
                     } catch (Exception e) {
                         e.printStackTrace();
+                        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
                     }
                 }
+                post.setImages(imageUrls);
             }
-            return new ResponseEntity<>(postService.newPost(post),HttpStatus.CREATED);
-//            amqpService.sendNewPostMessage("New post created");
-        }
-        else{
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+            Post savedPost = postService.newPost(post);
+            if (savedPost != null) {
+                return new ResponseEntity<>(savedPost, HttpStatus.CREATED);
+            } else {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("")
-    public ResponseEntity<Response> getAll(@RequestHeader(value = "x-user-id", required = false) Long userId,
-                             @RequestParam(defaultValue = "0") int page,
-                             @RequestParam(defaultValue = "3") int limit){
+    public ResponseEntity<Page<PostResponse>> getAll(@RequestHeader(value = "x-user-id", required = false) Long userId,
+                                                     @RequestParam(defaultValue = "0") int page,
+                                                     @RequestParam(defaultValue = "10") int size){
         {
-            Response response= new Response();
-            Page<Post> posts = postRepository.findAll(PageRequest.of(page,limit));
-            response.setBody(posts.getContent());
-            response.setAllPage(posts.getTotalPages());
 
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            Page<PostResponse> posts = postService.getPosts(page, size);
+            return new ResponseEntity<>(posts, HttpStatus.OK);
         }
     }
     
@@ -141,13 +151,41 @@ public class PostController {
         else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-//    @PostMapping("/reaction")
-//    public ResponseEntity<Reaction> like
+    @GetMapping("/group/{groupId}")
+    public ResponseEntity<List<Post>> groupPosts(@RequestParam("postIds") List<UUID> postIds){
 
-    @GetMapping("/group")
-    public ResponseEntity<List<Post>> groupPosts(){
 
-        return null;
+        return new ResponseEntity<>(postService.getPostsByListId(postIds),HttpStatus.OK);
+    }
+
+    //Comment
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<Comment> comment(@RequestParam("parentId") UUID parentId,
+                                           @RequestParam("content") String content,
+                                           @RequestParam("level") int level,
+                                           @RequestHeader(value = "x-user-id",required = false) Long userId,
+                                           @PathVariable(value = "id",required = false) UUID postId){
+        Post post = postService.findById(postId);
+        if (post!=null && userId != null)
+        {
+            Comment comment = new Comment();
+            comment.setContent(content);
+            comment.setUserId(userId);
+            post.addComment(comment);
+            if (level >= 3) {
+                comment.setLevel(3);
+                comment.setParentId(commentService.getCommentByParentId(parentId).getParentId());
+            }
+            else if (level == 0) {
+                comment.setLevel(level);
+                comment.setParentId(postId);
+            } else {
+                comment.setLevel(level);
+                comment.setParentId(parentId);
+            }
+            return new ResponseEntity<>(comment, HttpStatus.CREATED);
+        }
+        else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
 }
