@@ -13,14 +13,12 @@ import java.util.UUID;
 @Table
 @Getter
 @Setter
+@IdClass(ReactionId.class)
 public class Reaction {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
     private Long userId;
-    private int type;
+    private int emoji = -1;
     @CreationTimestamp
     private Timestamp createdAt;
     @UpdateTimestamp
@@ -28,6 +26,7 @@ public class Reaction {
 
     @ManyToOne
     @JoinColumn(name = "post_id")
+    @Id
     private Post post;
     public void setPost(Post post) {
         this.post = post;

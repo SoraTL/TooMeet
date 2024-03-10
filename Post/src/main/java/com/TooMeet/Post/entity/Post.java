@@ -22,6 +22,7 @@ public class Post {
     private UUID id;
 
     private Long authorId;
+    @Column(length = 5000)
     private String content;
     @CreationTimestamp
     private Timestamp createdAt;
@@ -29,7 +30,8 @@ public class Post {
     private Timestamp updatedAt;
     private List<String> images;
     private int privacy;
-
+    private int reactionCount = 0;
+    private int commentCount = 0;
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
@@ -43,10 +45,6 @@ public class Post {
         comments.remove(comment);
         comment.setPost(null);
     }
-    public Integer getCommentCount() {
-        return comments.size();
-    }
-
     public void addReaction(Reaction reaction) {
         reactions.add(reaction);
         reaction.setPost(this);
@@ -55,9 +53,6 @@ public class Post {
     public void removeReaction(Reaction reaction) {
         reactions.remove(reaction);
         reaction.setPost(null);
-    }
-    public Integer getReactionCount() {
-        return reactions.size();
     }
 
 }

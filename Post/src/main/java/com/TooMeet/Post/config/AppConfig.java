@@ -2,14 +2,16 @@ package com.TooMeet.Post.config;
 
 import com.cloudinary.Cloudinary;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class ImageUploadConfig {
+public class AppConfig {
 
     @Value("${cloudinary.cloud-name}")
     private String CLOUD_NAME;
@@ -24,6 +26,11 @@ public class ImageUploadConfig {
         config.put("api_key",API_KEY);
         config.put("api_secret",API_SECRET);
         return new Cloudinary(config);
+    }
+
+    @Bean
+    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+        return builder.build();
     }
 
 }
