@@ -55,8 +55,9 @@ public class PostService {
         postResponse.getAuthor().setName(author.getName());
         postResponse.getAuthor().setId(author.getId());
 
-        postResponse.setContent(post.getContent());
+        postResponse.setContent(post.getContent()==null?"": post.getContent() );
         postResponse.setPrivacy(post.getPrivacy());
+        postResponse.setImages(post.getImages());
         postResponse.setReactionCount(post.getReactionCount());
         postResponse.setCreateAt(post.getCreatedAt());
         postResponse.setUpdateAt(post.getUpdatedAt());

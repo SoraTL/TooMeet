@@ -99,6 +99,7 @@ public class PostController {
             Post savedPost = postService.newPost(post);
             PostResponse response = new PostResponse();
             response.convertToResponse(post);
+            response.setImages(post.getImages());
             response.getAuthor().setId(user.getId());
             response.getAuthor().setName(user.getName());
             response.getAuthor().setAvatar(user.getAvatar());
@@ -236,7 +237,7 @@ public class PostController {
                                              @RequestBody NewReactionModel reactionModel ){
 
         if(reactionModel.getEmoji()>5 || reactionModel.getEmoji()<0)
-            return new ResponseEntity<>("Emoji nằm trong khỏang 0 đến 4",HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Emoji nằm trong khỏang 0 đến 5",HttpStatus.BAD_REQUEST);
         Reaction reaction=reactionRepository.getByPostIdAndUserId(postId,userId);
         if(reaction!=null){
             reaction.setEmoji(reactionModel.getEmoji());
@@ -249,7 +250,7 @@ public class PostController {
         Post post = new Post();
         post = postService.findById(postId);
         if(post==null)
-            return new ResponseEntity<>("Không tìm thấy bài viết "+ postId.toString(),HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("Không tìm thấy bài viết "+ postId.toString(),HttpStatus.NOT_FOUND);
         post.getReactions().add(newReaction);
         newReaction.setPost(post);
         post.setReactionCount(post.getReactionCount()+1);
@@ -260,21 +261,21 @@ public class PostController {
 
     @Transactional
     @DeleteMapping("/{id}/reaction")
-    public String deteleReaction(@RequestHeader(value = "x-user-id") Long userId,
+    public ResponseEntity<String> deteleReaction(@RequestHeader(value = "x-user-id") Long userId,
                                  @PathVariable("id") UUID postId){
         Reaction reaction=reactionRepository.getByPostIdAndUserId(postId,userId);
         if(reaction == null){
-            return "Bạn chưa tương tác bài viết này!";
+            return new ResponseEntity<>("Bạn chưa tương tác bài viết này!",HttpStatus.BAD_REQUEST);
         }
-        if(reaction.getUserId()!=userId){
-            return "Lỗi";
+        if(!reaction.getUserId().equals(userId)){
+            return new ResponseEntity<>("Bạn không thể xóa tương tác này",HttpStatus.FORBIDDEN);
         }
         Post post = postRepository.findById(postId).orElse(null);
-        if(post==null) return "Không tìm thấy bài viết "+ postId.toString();
+        if(post==null) return new ResponseEntity<>("Không tìm thấy bài viết "+ postId.toString(),HttpStatus.NOT_FOUND);
         reactionRepository.deleteReactionByPostIdAndUserId(postId,userId);
         post.setReactionCount(post.getReactionCount()-1);
         postRepository.save(post);
-        return "Xóa tương tác thành công!";
+        return new ResponseEntity<>("Xóa tương tác thành công!",HttpStatus.OK);
 
     }
 
