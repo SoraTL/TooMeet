@@ -24,6 +24,8 @@ public class Reaction {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
+
+
     @ManyToOne
     @JoinColumn(name = "post_id")
     @Id

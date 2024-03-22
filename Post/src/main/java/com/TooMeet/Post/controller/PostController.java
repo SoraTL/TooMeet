@@ -2,17 +2,17 @@ package com.TooMeet.Post.controller;
 
 
 import com.TooMeet.Post.entity.Comment;
+import com.TooMeet.Post.entity.CommentReaction;
 import com.TooMeet.Post.entity.Post;
 import com.TooMeet.Post.entity.Reaction;
+import com.TooMeet.Post.repository.CommentReactionRepository;
 import com.TooMeet.Post.repository.CommentRepository;
 import com.TooMeet.Post.repository.PostRepository;
 import com.TooMeet.Post.repository.ReactionRepository;
-import com.TooMeet.Post.request.GetCommentModel;
-import com.TooMeet.Post.request.NewCommentModel;
-import com.TooMeet.Post.request.NewReactionModel;
-import com.TooMeet.Post.request.User;
+import com.TooMeet.Post.request.*;
 import com.TooMeet.Post.resposn.CommentResponse;
 import com.TooMeet.Post.resposn.PostResponse;
+import com.TooMeet.Post.resposn.ReactionResponse;
 import com.TooMeet.Post.service.CommentService;
 import com.TooMeet.Post.service.ImageUpload;
 import com.TooMeet.Post.service.PostService;
@@ -21,6 +21,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -50,6 +52,9 @@ public class PostController {
     CommentRepository commentRepository;
     @Autowired
     ReactionRepository reactionRepository;
+    @Autowired
+    CommentReactionRepository commentReactionRepository;
+
 
     RestTemplate restTemplate = new RestTemplate();
 
@@ -58,12 +63,7 @@ public class PostController {
 
     private final String groupUrl = "";
 
-//    {
-//        User user = restTemplate.getForObject(userUrl, User.class, userId);
-//    }
-//    {
-//        Group group = restTemplate.getForObject(groupUrl, Group.class, groupId);
-//    }
+
 
 
 
@@ -71,11 +71,11 @@ public class PostController {
     public ResponseEntity<PostResponse> newPost(@RequestHeader(value = "x-user-id") Long userId,
                                         @RequestParam(value = "content", required = false) String content,
                                         @RequestParam(value = "images", required = false) List<MultipartFile> images,
-                                        @RequestParam("privacy") int privacy,
+                                        @RequestParam("privacy") Integer privacy,
                                         @RequestParam(value = "groupId", required = false) Long groupId) {
         try {
-            String Url= userUrl + "/" + userId.toString();
-            if  ((content == null && ( images!=null && images.get(0).isEmpty()) ) || privacy < 0 || privacy > 3 || (content!=null && content.length()>5000) || (images!=null&& images.size()>4)) {
+            String Url= userUrl + "/users/info/" + userId.toString();
+            if  ((content == null && ( images!=null && images.get(0).isEmpty()) ) || privacy < 0 || privacy > 3 || (content!=null && content.length()>5000) || (images!=null&& images.size()>5)) {
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             User user = restTemplate.getForObject(Url, User.class, userId);
@@ -115,22 +115,49 @@ public class PostController {
     }
 
     @GetMapping("")
-    public ResponseEntity<Page<PostResponse>> getAll(@RequestHeader(value = "x-user-id",required = false) Long userId,
-                                                     @RequestParam(defaultValue = "0") int page,
-                                                     @RequestParam(defaultValue = "10") int limit){
+    public ResponseEntity<Page<PostResponse>> getAll(@RequestHeader(value = "x-user-id") Long userId,
+                                                     @RequestParam(defaultValue = "0") Integer page,
+                                                     @RequestParam(defaultValue = "10") Integer limit){
         {
 
             Page<PostResponse> posts = postService.getPosts(page, limit,userId);
             return new ResponseEntity<>(posts, HttpStatus.OK);
         }
     }
-    
+
+    @GetMapping("/guest")
+    public ResponseEntity<Page<PostResponse>> getAllByGuest(@RequestParam(defaultValue = "0") Integer page,
+                                                            @RequestParam(defaultValue = "10") Integer limit){
+        {
+            Pageable pageable= PageRequest.of(page,limit);
+            Page<PostResponse> posts = postService.getPosts(page,limit);
+            return new ResponseEntity<>(posts, HttpStatus.OK);
+
+        }
+    }
+
+    @PostMapping("/{id}/share") ResponseEntity<PostResponse> sharePost(@RequestHeader(value = "x-user-id") Long userId,
+                                                                       @PathVariable(value = "id") UUID postId,
+                                                                       @RequestParam(value = "content" ,required = false)String content ){
+        Post sharedPost=postRepository.findById(postId).orElse(null);
+
+        Post sharePost = new Post();
+
+        sharePost.setOriginPost(sharedPost);
+
+        return new ResponseEntity<>(HttpStatus.CREATED);
+
+
+
+    }
+
+
     @PutMapping("/{postId}")
     public ResponseEntity<Post> updatePost(@RequestHeader(value = "x-user-id") Long userId,
                                            @PathVariable UUID postId,
                                            @RequestParam("content") String content,
                                            @RequestPart("images") List<MultipartFile> images,
-                                           @RequestParam("privacy") int privacy ) throws Exception {
+                                           @RequestParam("privacy") Integer privacy ) throws Exception {
         if(postRepository.findById(postId).orElse(null).getAuthorId() == userId)
         {
             Post existingPost = postService.findById(postId);
@@ -190,93 +217,214 @@ public class PostController {
         return new ResponseEntity<>(postService.getPostsByListId(postIds),HttpStatus.OK);
     }
 
+
     //Comment
     @PostMapping("/{id}/comments")
-    public ResponseEntity<Comment> comment(@RequestHeader(value = "x-user-id",required = false) Long userId,
-                                           @PathVariable(value = "id",required = false) UUID postId,
+    public ResponseEntity<CommentResponse> comment(@RequestHeader(value = "x-user-id") Long userId,
+                                           @PathVariable(value = "id") UUID postId,
                                            @RequestBody NewCommentModel commentModel){
+        String Url= userUrl + "/users/info/" + userId.toString();
         Post post = postService.findById(postId);
-        if (post!=null && userId != null)
-        {
-            Comment comment = new Comment();
-            comment.setContent(commentModel.getContent());
-            comment.setUserId(userId);
-            post.getComments().add(comment);
-            comment.setPost(post);
-            if (commentModel.getLevel() >= 3) {
-                comment.setLevel(3);
-                comment.setParentId(commentService.getCommentByParentId(commentModel.getParentId()).getParentId());
-            }
-            else if (commentModel.getLevel() == 0) {
-                comment.setLevel(0);
-                comment.setParentId(postId);
-            } else {
-                comment.setLevel(commentModel.getLevel());
-                comment.setParentId(commentModel.getParentId());
-            }
-            Comment savedComment= commentRepository.save(comment);
-            return new ResponseEntity<>(savedComment, HttpStatus.CREATED);
-        }
-        else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+//        User user = restTemplate.getForObject(Url, User.class, userId);
+        User user = new User();
+        user.setId(123L);
+        user.setName("lahjkdshf");
+        if(user == null )return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+
+        Comment comment = new Comment();
+        comment.setContent(commentModel.getContent());
+        comment.setUserId(userId);
+        comment.setPost(post);
+        comment.setLevel(0);
+        comment.setParentId(postId);
+
+        post.getComments().add(comment);
+        post.setCommentCount(post.getCommentCount()+1);
+        postRepository.save(post);
+        List<Comment> comments=post.getComments();
+        Comment savedComment=comments.get(comments.size()-1);
+
+        CommentResponse commentResponse = new CommentResponse();
+        commentResponse.setId(savedComment.getId());
+        commentResponse.getAuthor().setId(userId);
+        commentResponse.getAuthor().setName(user.getName());
+        commentResponse.getAuthor().setAvatar(user.getAvatar());
+        commentResponse.setContent(savedComment.getContent());
+        commentResponse.setCreatedAt(savedComment.getCreatedAt());
+        commentResponse.setParentId(savedComment.getParentId());
+        commentResponse.setLevel(savedComment.getLevel());
+
+        return new ResponseEntity<>(commentResponse, HttpStatus.CREATED);
+
     }
+
+    @PostMapping("/{id}/comments/reply")
+    public ResponseEntity<CommentResponse> replyComment(@RequestHeader(value = "x-user-id") Long userId,
+                                                        @PathVariable(value = "id") UUID postId,
+                                                        @RequestBody NewReplyModel replyModel){
+        String Url= userUrl + "/users/info/" + userId.toString();
+        Post post = postService.findById(postId);
+//        User user = restTemplate.getForObject(Url, User.class, userId);
+        User user = new User();
+        user.setId(123L);
+        user.setName("lahjkdshf");
+        if(user == null )return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        Comment comment = commentRepository.findById(replyModel.getParentId()).orElse(null);
+        if(comment==null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        Comment reply = new Comment();
+        if(comment.getLevel()==2){
+            reply.setLevel(2);
+            reply.setParentId(comment.getParentId());
+        }
+        else {
+            reply.setParentId(replyModel.getParentId());
+            reply.setLevel(comment.getLevel() + 1);
+        }
+        reply.setContent(replyModel.getContent());
+        reply.setUserId(userId);
+        reply.setPost(post);
+
+        post.getComments().add(reply);
+        post.setCommentCount(post.getCommentCount()+1);
+        postRepository.save(post);
+
+        List<Comment> comments=post.getComments();
+        Comment savedComment=comments.get(comments.size()-1);
+
+        CommentResponse commentResponse = new CommentResponse();
+        commentResponse.setId(savedComment.getId());
+        commentResponse.getAuthor().setId(userId);
+        commentResponse.getAuthor().setName(user.getName());
+        commentResponse.getAuthor().setAvatar(user.getAvatar());
+        commentResponse.setContent(savedComment.getContent());
+        commentResponse.setCreatedAt(savedComment.getCreatedAt());
+        commentResponse.setParentId(savedComment.getParentId());
+        commentResponse.setLevel(savedComment.getLevel());
+
+        return new ResponseEntity<>(commentResponse, HttpStatus.CREATED);
+
+    }
+
+//    @DeleteMapping("/{id}")
 
     @GetMapping("/{id}/comments")
     public ResponseEntity<Page<CommentResponse>> getComment(
                                                       @RequestHeader(value = "x-user-id",required = false) Long userId,
-                                                      @RequestBody GetCommentModel commentModel,
+                                                      @RequestParam(value = "parentId",required = false) UUID parentId,
+                                                      @RequestParam(value = "page",defaultValue = "0")Integer page,
+                                                      @RequestParam(value = "limit",defaultValue = "5") Integer limit,
                                                       @PathVariable("id") UUID postId){
-
-        Page<CommentResponse> comments = commentService.getCommentsByParentId(commentModel.getParentId(),commentModel.getPage(),commentModel.getLimit());
+        if(parentId==null){
+            return new ResponseEntity<>(commentService.getCommentsByParentId(postId,page,limit,userId),HttpStatus.OK);
+        }
+        Comment comment = commentRepository.findById(parentId).orElse(null);
+        Page<CommentResponse> comments = commentService.getCommentsByParentId(parentId,page,limit,userId);
         return new ResponseEntity<>(comments,HttpStatus.OK);
-
     }
 
-    @PutMapping("/{id}/reaction")
-    public ResponseEntity<String> reaction(@RequestHeader(value = "x-user-id") Long userId,
-                                             @PathVariable("id") UUID postId,
-                                             @RequestBody NewReactionModel reactionModel ){
 
-        if(reactionModel.getEmoji()>5 || reactionModel.getEmoji()<0)
-            return new ResponseEntity<>("Emoji nằm trong khỏang 0 đến 5",HttpStatus.BAD_REQUEST);
+    // Post Reaction
+    @PutMapping("/{id}/reaction")
+    public ResponseEntity<ReactionResponse> reaction(@RequestHeader(value = "x-user-id") Long userId,
+                                                     @PathVariable("id") UUID postId,
+                                                     @RequestBody NewReactionModel reactionModel ){
+        ReactionResponse response = new ReactionResponse();
+        if(reactionModel.getEmoji()>5 || reactionModel.getEmoji()<0) {
+            response.setMassage("Emoji nằm trong khỏang 0 đến 5");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        Post post;
+        post = postService.findById(postId);
+        if(post==null) {
+            response.setMassage("Không tìm thấy bài viết " + postId.toString());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
         Reaction reaction=reactionRepository.getByPostIdAndUserId(postId,userId);
         if(reaction!=null){
             reaction.setEmoji(reactionModel.getEmoji());
             reactionRepository.save(reaction);
-            return new ResponseEntity<>("Đã cập nhật tương tác!",HttpStatus.OK);
+            response.setMassage("Đã cập nhật tương tác!");
+            response.setReactionCount(post.getReactionCount());
+            return new ResponseEntity<>(response,HttpStatus.OK);
         }
+
         Reaction newReaction = new Reaction();
         newReaction.setEmoji(reactionModel.getEmoji());
         newReaction.setUserId(userId);
-        Post post = new Post();
-        post = postService.findById(postId);
-        if(post==null)
-            return new ResponseEntity<>("Không tìm thấy bài viết "+ postId.toString(),HttpStatus.NOT_FOUND);
+
         post.getReactions().add(newReaction);
         newReaction.setPost(post);
         post.setReactionCount(post.getReactionCount()+1);
         postRepository.save(post);
-        return new ResponseEntity<>("Tương tác thành công!",HttpStatus.CREATED);
-
+        response.setMassage("Tương tác thành công!");
+        response.setReactionCount(post.getReactionCount());
+        return new ResponseEntity<>(response,HttpStatus.CREATED);
     }
 
     @Transactional
     @DeleteMapping("/{id}/reaction")
-    public ResponseEntity<String> deteleReaction(@RequestHeader(value = "x-user-id") Long userId,
+    public ResponseEntity<ReactionResponse> deteleReaction(@RequestHeader(value = "x-user-id") Long userId,
                                  @PathVariable("id") UUID postId){
         Reaction reaction=reactionRepository.getByPostIdAndUserId(postId,userId);
+        ReactionResponse response= new ReactionResponse();
         if(reaction == null){
-            return new ResponseEntity<>("Bạn chưa tương tác bài viết này!",HttpStatus.BAD_REQUEST);
+            response.setMassage("Bạn chưa tương tác bài viết này!");
+            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
         }
         if(!reaction.getUserId().equals(userId)){
-            return new ResponseEntity<>("Bạn không thể xóa tương tác này",HttpStatus.FORBIDDEN);
+            response.setMassage("Bạn không thể xóa tương tác này");
+            return new ResponseEntity<>(response,HttpStatus.FORBIDDEN);
         }
         Post post = postRepository.findById(postId).orElse(null);
-        if(post==null) return new ResponseEntity<>("Không tìm thấy bài viết "+ postId.toString(),HttpStatus.NOT_FOUND);
+        if(post==null) {
+            response.setMassage("Không tìm thấy bài viết " + postId.toString());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
         reactionRepository.deleteReactionByPostIdAndUserId(postId,userId);
         post.setReactionCount(post.getReactionCount()-1);
         postRepository.save(post);
-        return new ResponseEntity<>("Xóa tương tác thành công!",HttpStatus.OK);
+        response.setMassage("Xóa tương tác thành công!");
+        response.setReactionCount(post.getReactionCount());
+        return new ResponseEntity<>(response,HttpStatus.OK);
 
     }
 
+    //Comment Reaction
+    @PostMapping("/{id}/commentReaction")
+    public ResponseEntity<ReactionResponse> commentReaction(@RequestHeader(value = "x-user-id") Long userId,
+                                                  @PathVariable("id") UUID commentId,
+                                                  @RequestBody NewReactionModel reactionModel){
+        ReactionResponse response = new ReactionResponse();
+        if(reactionModel.getEmoji()>5 || reactionModel.getEmoji()<0) {
+            response.setMassage("Emoji nằm trong khỏang 0 đến 5");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+        Comment comment;
+        comment = commentRepository.findById(commentId).orElse(null);
+        if(comment==null) {
+            response.setMassage("Không tìm thấy binh luan " + commentId.toString());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        CommentReaction reaction = commentReactionRepository.getByCommentIdAndUserId(commentId,userId);
+        if(reaction!=null){
+            reaction.setEmoji(reactionModel.getEmoji());
+            commentReactionRepository.save(reaction);
+            response.setMassage("Đã cập nhật tương tác!");
+            response.setReactionCount(comment.getLikeCount());
+            return new ResponseEntity<>(response,HttpStatus.OK);
+        }
+
+        CommentReaction newReaction = new CommentReaction();
+        newReaction.setEmoji(reactionModel.getEmoji());
+        newReaction.setUserId(userId);
+
+        comment.getReactions().add(newReaction);
+        newReaction.setComment(comment);
+        comment.setLikeCount(comment.getLikeCount()+1);
+        commentRepository.save(comment);
+        response.setMassage("Tương tác thành công!");
+        response.setReactionCount(comment.getLikeCount());
+        return new ResponseEntity<>(response,HttpStatus.CREATED);
+    }
+    
 }

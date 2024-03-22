@@ -13,8 +13,6 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 public class NewCommentModel {
-    private UUID parentId;
     private String content;
-    private int level;
 }
 

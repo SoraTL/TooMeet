@@ -13,4 +13,6 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     List<Post> findByAuthorId(Long authorId);
     @Override
     Page<Post> findAll(Pageable pageable);
+    Post findOneByAuthorId(Long authorId);
+
 }

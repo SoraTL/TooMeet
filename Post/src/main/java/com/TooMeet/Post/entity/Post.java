@@ -1,5 +1,6 @@
 package com.TooMeet.Post.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,27 +33,21 @@ public class Post {
     private int privacy;
     private int reactionCount = 0;
     private int commentCount = 0;
+    private UUID groupId;
+
+    @ManyToOne
+    @JoinColumn
+    private Post originPost;
+    @OneToMany(mappedBy = "originPost")
+    @JsonIgnore
+    private List<Post> sharedPosts = new ArrayList<>();
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Comment> comments = new ArrayList<>();
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private List<Reaction> reactions = new ArrayList<>();
 
-    public void addComment(Comment comment) {
-        comments.add(comment);
-        comment.setPost(this);
-    }
-    public void removeComment(Comment comment) {
-        comments.remove(comment);
-        comment.setPost(null);
-    }
-    public void addReaction(Reaction reaction) {
-        reactions.add(reaction);
-        reaction.setPost(this);
-    }
-
-    public void removeReaction(Reaction reaction) {
-        reactions.remove(reaction);
-        reaction.setPost(null);
-    }
 
 }
+
+

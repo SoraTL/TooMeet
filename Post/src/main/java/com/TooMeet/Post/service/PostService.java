@@ -44,11 +44,16 @@ public class PostService {
         Page<Post> postPage = postRepository.findAll(pageable);
         return postPage.map(post -> convertToResponse(post,userId));
     }
+    public Page<PostResponse> getPosts(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").descending());
+        Page<Post> postPage = postRepository.findAll(pageable);
+        return postPage.map(post -> convertToResponse(post));
+    }
     public PostResponse convertToResponse(Post post) {
         PostResponse postResponse = new PostResponse();
         postResponse.setId(post.getId());
 
-        String authorUrl = authorServiceUrl + "/" + post.getAuthorId();
+        String authorUrl = authorServiceUrl + "/users/info/" + post.getAuthorId();
         User author = restTemplate.getForObject(authorUrl, User.class);
 
         postResponse.getAuthor().setAvatar(author.getAvatar());
@@ -92,7 +97,20 @@ public class PostService {
             Post post = postRepository.findById(postId).orElse(null);
             posts.add(post);
         }
+
         return posts;
+    }
+
+    public List<Post> getPostByListUserId(List<Long> userIds){
+
+        List<Post> posts = new ArrayList<>();
+
+        for(Long userId:userIds){
+            posts.add(postRepository.findOneByAuthorId(userId));
+        }
+
+        return posts;
+
     }
 
 }

@@ -26,7 +26,6 @@ public class ImageUploadImpl implements ImageUpload {
 
     public void deleteImageById(String imageId) {
         try {
-            // Xóa hình ảnh bằng ID
             cloudinary.uploader().destroy(imageId, ObjectUtils.emptyMap());
         } catch (Exception e) {
             e.printStackTrace();

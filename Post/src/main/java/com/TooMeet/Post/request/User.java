@@ -1,9 +1,6 @@
 package com.TooMeet.Post.request;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Date;
 
@@ -14,13 +11,15 @@ import java.util.Date;
 public class User {
     private Long id;
     private String name;
-    private profile profile;
+    private profile profile = new profile();
 
     @Setter
     @Getter
     @NoArgsConstructor
+    @AllArgsConstructor
+    @RequiredArgsConstructor
     private static class profile{
-        private Image avatar;
+        private Image avatar = new Image();
         private String description;
         private Format format;
     }
