@@ -1,5 +1,6 @@
 package com.toomeet.user.auth;
 
+import com.toomeet.user.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +20,8 @@ public class AccountService {
         return accountRepository.findByEmail(email);
     }
 
-    public Optional<Account> getAccountByUserId(Long userId) {
-        return accountRepository.findByUserId(userId);
-    }
-
-    public Optional<Account> getAccountById(String accountId) {
-        return accountRepository.findById(accountId);
+    public Account getAccountById(String accountId) {
+        return accountRepository.findById(accountId).orElseThrow(() -> new NotFoundException("account not found"));
     }
 
 }

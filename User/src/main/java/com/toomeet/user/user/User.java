@@ -51,7 +51,6 @@ public class User {
     @UpdateTimestamp
     private Date updatedAt;
 
-
     @Override
     public String toString() {
         return "User{" +

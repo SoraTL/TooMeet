@@ -8,14 +8,17 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-
+    
     @Query(value =
-            "select u from User u where " +
-                    "u.id != ?1 and u.id not in " +
-                    "(select " +
-                    "case when f.user1.id = ?1 then f.user2.id else f.user1.id end " +
-                    "from Friend f where " +
-                    "f.user1.id = ?1 or f.user2.id = ?1) "
+            "select u from User u " +
+                    "where u.id != ?1 " +
+                    "and not exists ( " +
+                    "select 1 from Friend f " +
+                    "where (f.user1.id = ?1 and f.user2.id = u.id) or (f.user2.id = ?1 and f.user1.id = u.id)" +
+                    ") and not exists ( " +
+                    "select 1 from FriendRequest  r " +
+                    "where (r.sender.id = ?1 and r.receiver.id = u.id) or (r.sender.id = u.id and r.receiver.id = ?1)" +
+                    ")"
     )
     Page<User> getSuggestions(Long userId, Pageable pageable);
 

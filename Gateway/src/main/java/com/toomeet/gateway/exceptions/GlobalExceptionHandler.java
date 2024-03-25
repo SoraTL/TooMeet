@@ -2,7 +2,6 @@ package com.toomeet.gateway.exceptions;
 
 
 import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -99,22 +98,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, status);
     }
 
-    @ExceptionHandler({SignatureException.class})
-    public ResponseEntity<ErrorResponse> JwtException(SignatureException exception) {
-        logException(exception);
-        HttpStatus status = HttpStatus.FORBIDDEN;
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .message("TOKEN_ERROR: " + exception)
-                .status(status)
-                .build();
-
-        return new ResponseEntity<>(errorResponse, status);
-    }
 
     private void logException(Exception e) {
 //        log.error(e.toString());
         log.error(e.getMessage());
-        e.printStackTrace();
+//        e.printStackTrace();
     }
 
 }

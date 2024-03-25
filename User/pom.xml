@@ -142,7 +142,7 @@
             <artifactId>gson</artifactId>
         </dependency>
 
-<!--        MESSAGE BROKER-->
+        <!--        MESSAGE BROKER-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>

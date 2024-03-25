@@ -7,6 +7,8 @@ import com.toomeet.user.exceptions.BadRequestException;
 import com.toomeet.user.exceptions.ConflictException;
 import com.toomeet.user.exceptions.ForbiddenException;
 import com.toomeet.user.exceptions.NotFoundException;
+import com.toomeet.user.image.Format;
+import com.toomeet.user.image.Image;
 import com.toomeet.user.jwt.JwtService;
 import com.toomeet.user.mail.MailService;
 import com.toomeet.user.mail.OtpMail;
@@ -150,14 +152,22 @@ public class AuthService {
                 .password(accountRegisterDto.getPassword())
                 .build();
 
+        String avatar = "https://fiverr-res.cloudinary.com/images/t_main1,q_auto,f_auto,q_auto,f_auto/gigs2/292600815/original/46fe8a85183ee3d1d7965c4fad9042ec83bb0875/transform-your-image-into-stunning-ai-generated-masterpiece.png";
+
         User user = User.builder()
                 .name(accountRegisterDto.getName())
                 .profile(Profile.builder()
                         .dateOfBirth(accountRegisterDto.getDateOfBirth())
                         .gender(accountRegisterDto.getGender())
+                        .avatar(Image.builder()
+                                .cloudPublicId("test")
+                                .format(Format.PNG)
+                                .url(avatar)
+                                .build())
                         .build())
                 .account(account)
                 .build();
+
 
         account.setUser(user);
 
@@ -165,7 +175,7 @@ public class AuthService {
         String token = jwtService.generateToken(newAccount);
 
         AccountResponseDto accountResponse = mapper.map(newAccount, AccountResponseDto.class);
-
+        
         return AuthenticatedResponseDto
                 .builder()
                 .account(accountResponse)

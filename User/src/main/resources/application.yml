@@ -1,52 +1,65 @@
 server:
-  port: ${PORT:8082}
+    port: ${PORT:8082}
 spring:
-  rabbitmq:
-    host: ${RABBIT_HOST:albatross.rmq.cloudamqp.com}
-    port: ${RABBIT_PORT:5672}
-    username: ${RABBIT_USERNAME:fmochalo}
-    password: ${RABBIT_PASSWORD:329AQ6myicnp6iaqzRVYnEvJFFmDo5Jj}
-    virtual-host: ${RABBIT_VHOST:fmochalo}
-  redis:
-    uri: ${REDIS_URL:redis://default:JPhjhb6IILH52pdc2d3gKH2FhPjg3p5F@roundhouse.proxy.rlwy.net:51667}
-  application:
-    name: user-service
-  jpa:
-    database: postgresql
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
-  datasource:
-    url: ${DB_HOST:jdbc:postgresql://viaduct.proxy.rlwy.net:52605/railway}
-    driver-class-name: org.postgresql.Driver
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:AeaG2*ecc*A4F3aF*3E13dG6E1344GgE}
-  mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    username: ${MAIL_USER:pikapi.anony@gmail.com}
-    password: ${MAIL_PASSWORD:sehnwhibxlzjuezp}
-    port: ${MAIL_PORT:587}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+    application:
+        name: user-service
+    rabbitmq:
+        host: ${RABBIT_HOST:abc}
+        port: ${RABBIT_PORT:5672}
+        username: ${RABBIT_USERNAME:username}
+        password: ${RABBIT_PASSWORD:password}
+        virtual-host: ${RABBIT_VHOST:username}
+        exchange:
+            notify_exchange: ex_notify
+            chat_exchange: ex_chat
+        queue:
+            public:
+                notify_friend_request: "q_notify_friend_request"
+                notify_reply_friend_request: "q_notify_reply_friend_request"
+                chat_create_room: "q_chat_create_room"
+            subscribe:
+        routing:
+            notify_friend_request: "r_notify_friend_request"
+            notify_reply_friend_request: "r_notify_reply_friend_request"
+            chat_create_room: "r_chat_create_room"
+    redis:
+        uri: ${REDIS_URL:redis://abc}
+
+    jpa:
+        database: postgresql
+        #    show-sql: true
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                format_sql: true
+    datasource:
+        url: ${DB_HOST:jdbc:postgresql://abc}
+        driver-class-name: org.postgresql.Driver
+        username: ${DB_USER:username}
+        password: ${DB_PASSWORD:password}
+    mail:
+        host: ${MAIL_HOST:smtp.gmail.com}
+        username: ${MAIL_USER:abc@gmail.com}
+        password: ${MAIL_PASSWORD:app-password}
+        port: ${MAIL_PORT:587}
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
 
 jwt:
-  secret_key: ${TOKEN_SECRET_KEY:KqLaJQJXIfarUZFJ39BfpcWw9vyx9VMOd5SSLDIsu9ajKavYop96uOez20yCDrucd/s=}
-  expired_time: ${TOKEN_EXPIRED_TIME:7200000 } # 2 hours
+    secret_key: ${TOKEN_SECRET_KEY:jwt-secret}
+    expired_time: ${TOKEN_EXPIRED_TIME:7200000 } # 2 hours
 otp:
-  expired_time: ${OTP_EXPIRED_TIME:300000}
+    expired_time: ${OTP_EXPIRED_TIME:300000}
 
 management:
-  endpoint:
-    health:
-      show-details: always
-
+    endpoint:
+        health:
+            show-details: always
 #eureka:
 #    client:
 #        service-url:

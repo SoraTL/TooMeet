@@ -50,7 +50,7 @@ public class JwtServiceImpl implements JwtService {
         claims.put("sub", subject);
         claims.put("iat", now.getTime());
         claims.put("exp", expiredTime);
-        claims.put("iss", "toomeet-toomeet-toomeet");
+        claims.put("iss", "minnhieuano-toomeet");
 
 
         return Jwts

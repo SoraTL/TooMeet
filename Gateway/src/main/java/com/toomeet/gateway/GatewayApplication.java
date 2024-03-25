@@ -19,7 +19,7 @@ public class GatewayApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        String token = jwtService.generateToken("my-id");
-        System.out.println("token = " + token);
+//        String token = jwtService.generateToken("my-id");
+//        System.out.println("token = " + token);
     }
 }

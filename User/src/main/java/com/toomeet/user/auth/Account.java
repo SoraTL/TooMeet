@@ -1,5 +1,6 @@
 package com.toomeet.user.auth;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.toomeet.user.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -38,6 +39,7 @@ public class Account implements UserDetails {
     private User user;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "account", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<AccountRole> roles;
 
     @CreationTimestamp
@@ -48,14 +50,11 @@ public class Account implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> test = this.roles
+        return this.roles
                 .stream()
                 .map(
                         role -> new SimpleGrantedAuthority("ROLE_" + role)
                 ).toList();
-
-        System.out.println("test = " + test);
-        return test;
     }
 
 

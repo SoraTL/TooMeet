@@ -1,6 +1,6 @@
 package com.toomeet.user.friend.dto;
 
-import com.toomeet.user.image.Image;
+import com.toomeet.user.image.dto.ImageResponseDto;
 import com.toomeet.user.user.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +18,7 @@ public class FriendResponseDto {
 
     @Data
     private static class Profile {
-        private Image avatar;
+        private ImageResponseDto avatar;
         private Gender gender;
     }
 

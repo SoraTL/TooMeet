@@ -33,6 +33,7 @@ public class JwtServiceImpl implements JwtService {
         return extractClaims(token, (claims -> claims.get("email").toString()));
     }
 
+
     @Override
     public boolean isTokenExpired(String token) {
         return extractClaims(token, claims -> {

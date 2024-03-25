@@ -3,6 +3,7 @@ package com.toomeet.user.auth;
 import com.toomeet.user.auth.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class AuthController {
     private final AuthService authService;
+    private final ModelMapper mapper;
 
     @PostMapping("register")
     public ResponseEntity<AuthenticationResponseDto> register(@RequestBody @Valid AccountRegisterDto dto) {

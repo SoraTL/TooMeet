@@ -1,0 +1,18 @@
+server:
+    port: 8081
+
+spring:
+    rabbitmq:
+        host: ${RABBIT_HOST:rabbit-host}
+        port: ${RABBIT_PORT:5672}
+        username: ${RABBIT_USERNAME:rabbit}
+        password: ${RABBIT_PASSWORD:password}
+        virtual-host: ${RABBIT_VHOST:rabbit}
+        queue:
+            public:
+            subscribe:
+                socket_notify_friend_queue: "q_socket_notify_friend"
+                socket_new_chat_message: "q_socket_new_chat_message"
+                socket_update_chat_room: "q_socket_update_chat_room"
+                socket_chat_room_member_ship: "q_socket_chat_room_member_ship"
+                socket_chat_message_reaction: "q_socket_chat_message_reaction"

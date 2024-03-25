@@ -34,9 +34,10 @@ public class Image {
     private User profile;
 
     @CreationTimestamp
-    private Date createAt;
+    private Date createdAt;
 
     @UpdateTimestamp
     private Date updatedAt;
+
 
 }

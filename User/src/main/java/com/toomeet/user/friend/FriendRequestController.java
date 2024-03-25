@@ -1,9 +1,7 @@
 package com.toomeet.user.friend;
 
 
-import com.toomeet.user.friend.dto.AddFriendRequestDto;
-import com.toomeet.user.friend.dto.FriendRequestResponseDto;
-import com.toomeet.user.friend.dto.ReplyAddFriendDto;
+import com.toomeet.user.friend.dto.*;
 import com.toomeet.user.user.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +19,15 @@ public class FriendRequestController {
     private final FriendRequestService friendRequestService;
 
     @PostMapping("/add")
-    public ResponseEntity<String> addFriend(@AuthenticationPrincipal User user, @RequestBody @Valid AddFriendRequestDto dto) {
-        String response = friendRequestService.addFriend(user, dto);
+    public ResponseEntity<AddFriendResponseDto> addFriend(@AuthenticationPrincipal User user, @RequestBody @Valid AddFriendRequestDto dto) {
+        AddFriendResponseDto response = friendRequestService.addFriend(user, dto);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping("/cancel/{requestId}")
+    public ResponseEntity<String> cancelFriendRequest(@AuthenticationPrincipal User user, @PathVariable Long requestId) {
+        String message = friendRequestService.cancelFriendRequest(requestId, user);
+        return new ResponseEntity<>(message, HttpStatus.OK);
     }
 
     @PostMapping("/reply")
@@ -38,14 +42,14 @@ public class FriendRequestController {
     }
 
     @GetMapping("/sent")
-    public ResponseEntity<List<FriendRequestResponseDto>> getSentFriendRequests(@AuthenticationPrincipal User user) {
-        List<FriendRequestResponseDto> requests = friendRequestService.getSentFriendRequests(user);
+    public ResponseEntity<List<FriendRequestSentDto>> getSentFriendRequests(@AuthenticationPrincipal User user) {
+        List<FriendRequestSentDto> requests = friendRequestService.getSentFriendRequests(user);
         return new ResponseEntity<>(requests, HttpStatus.OK);
     }
 
     @GetMapping("/received")
-    public ResponseEntity<List<FriendRequestResponseDto>> getReceivedFriendRequests(@AuthenticationPrincipal User user) {
-        List<FriendRequestResponseDto> requests = friendRequestService.getReceivedFriendRequests(user);
+    public ResponseEntity<List<FriendRequestReceivedDto>> getReceivedFriendRequests(@AuthenticationPrincipal User user) {
+        List<FriendRequestReceivedDto> requests = friendRequestService.getReceivedFriendRequests(user);
         return new ResponseEntity<>(requests, HttpStatus.OK);
     }
 }

@@ -2,13 +2,14 @@ package com.toomeet.user.friend;
 
 import com.toomeet.user.exceptions.BadRequestException;
 import com.toomeet.user.friend.dto.FriendResponseDto;
+import com.toomeet.user.user.Status;
 import com.toomeet.user.user.User;
 import com.toomeet.user.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,17 +33,16 @@ public class FriendService {
         friendRepository.save(newFriend);
     }
 
-    public List<FriendResponseDto> getAllFriend(User user) {
-        List<Friend> friends = friendRepository.getAllByUser1IdOrUser2Id(user.getId(), user.getId());
+    public Page<FriendResponseDto> getAllFriend(User user, int page, int limit) {
+        Page<Friend> friends = friendRepository.getAllByUserId(user.getId(), PageRequest.of(page, limit));
         return friends
-                .stream()
                 .map(friend ->
                         friend.getUser1().getId().equals(user.getId()) ?
                                 friend.getUser2() :
                                 friend.getUser1())
                 .map(friend ->
                         mapper.map(friend, FriendResponseDto.class)
-                ).toList();
+                );
     }
 
     public String removeFriend(User user, Long friendId) {
@@ -58,5 +58,24 @@ public class FriendService {
         return "Hủy kết bạn thành công";
     }
 
-    
+
+    public Page<FriendResponseDto> getOnlineFriends(User user, int page, int limit) {
+        Page<Friend> friends = friendRepository.getAllByStatus(user.getId(), Status.ONLINE, PageRequest.of(page, limit));
+        return friends.map(friend ->
+                friend.getUser1().getId().equals(user.getId()) ?
+                        mapper.map(friend.getUser2(), FriendResponseDto.class) :
+                        mapper.map(friend.getUser1(), FriendResponseDto.class)
+        );
+
+    }
+
+    public Page<FriendResponseDto> searchFriend(User user, String keyword, int page, int limit) {
+        PageRequest request = PageRequest.of(page, limit);
+        Page<Friend> friends = friendRepository.searchByName(user.getId(), keyword, request);
+        return friends.map(friend ->
+                friend.getUser1().getId().equals(user.getId()) ?
+                        mapper.map(friend.getUser2(), FriendResponseDto.class) :
+                        mapper.map(friend.getUser1(), FriendResponseDto.class)
+        );
+    }
 }

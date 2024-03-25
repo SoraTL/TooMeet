@@ -1,0 +1,33 @@
+server:
+    port: 4002
+spring:
+    application:
+        name: notifications
+    jpa:
+        database: postgresql
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                format_sql: true
+    datasource:
+        url: ${DB_HOST:jdbc:postgresql://localhost/abc}
+        driver-class-name: org.postgresql.Driver
+        username: ${DB_USERNAME:abc}
+        password: ${DB_PASSWORD:213213}
+    rabbitmq:
+        host: ${RABBIT_HOST:rabbit-host}
+        port: ${RABBIT_PORT:5672}
+        username: ${RABBIT_USERNAME:abcd}
+        password: ${RABBIT_PASSWORD:passsword}
+        virtual-host: ${RABBIT_VHOST:lwejyugl}
+        exchange:
+            socket_exchange: ex_socket
+        queue:
+            public:
+                socket_notify_friend_queue: "q_socket_notify_friend"
+            subscribe:
+                notify_friend_request_queue: "q_notify_friend_request"
+                notify_reply_friend_request_queue: "q_notify_reply_friend_request"
+        routing:
+            socket_notify_friend_routing: "r_socket_notify_friend"

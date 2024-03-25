@@ -1,0 +1,47 @@
+server:
+    port: 8088
+spring:
+    application:
+        name: chat-service
+    rabbitmq:
+        host: ${RABBIT_HOST:rabbit-host}
+        port: ${RABBIT_PORT:5672}
+        username: ${RABBIT_USERNAME:username}
+        password: ${RABBIT_PASSWORD:my-password}
+        virtual-host: ${RABBIT_VHOST:rabbit-vhost}
+        exchange:
+            socket_exchange: ex_socket
+        queue:
+            public:
+                socket_new_chat_message: "q_socket_new_chat_message"
+                socket_update_chat_room: "q_socket_update_chat_room"
+                socket_chat_room_member_ship: "q_socket_chat_room_member_ship"
+                socket_chat_message_reaction: "q_socket_chat_message_reaction"
+            subscribe:
+                chat_create_room: "q_chat_create_room"
+        routing:
+            socket_new_chat_message_routing: "r_socket_new_chat_message_routing"
+            socket_update_chat_room: "r_socket_update_chat_room_routing"
+            socket_chat_room_member_ship: "r_socket_chat_room_member_ship"
+            socket_chat_message_reaction: "r_socket_chat_message_reaction"
+    redis:
+        uri: ${REDIS_URL:http://localhost:19404}
+    jpa:
+        database: postgresql
+        show-sql: true
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                format_sql: true
+    datasource:
+        url: ${DB_URL:postgres-url}
+        username: ${DB_USER:user}
+        password: ${DB_PASSWORD:user}
+
+jwt:
+    secret_key: ${TOKEN_SECRET_KEY:i-am-secret}
+    expired_time: ${TOKEN_EXPIRED_TIME:259200000 } # 3 days
+
+cloudinary:
+    url: ${CLOUDINARY_URL:cloudinary://abc....}

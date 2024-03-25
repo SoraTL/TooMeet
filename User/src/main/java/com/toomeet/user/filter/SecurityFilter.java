@@ -2,7 +2,6 @@ package com.toomeet.user.filter;
 
 import com.toomeet.user.auth.Account;
 import com.toomeet.user.auth.AccountService;
-import com.toomeet.user.exceptions.NotFoundException;
 import com.toomeet.user.user.User;
 import com.toomeet.user.user.UserService;
 import jakarta.servlet.FilterChain;
@@ -49,10 +48,7 @@ public class SecurityFilter extends OncePerRequestFilter {
 
                 User user = userService.getUserById(userId);
 
-                Account account = accountService.getAccountById(accountIdHeader).orElseThrow(
-                        () -> new NotFoundException("Account not found")
-                );
-
+                Account account = accountService.getAccountById(accountIdHeader);
                 SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
 
                 UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user, null, account.getAuthorities());

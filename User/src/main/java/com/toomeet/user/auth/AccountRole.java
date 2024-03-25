@@ -1,5 +1,6 @@
 package com.toomeet.user.auth;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,6 +27,7 @@ public class AccountRole {
     private Role role;
 
     @ManyToOne
+    @JsonBackReference
     private Account account;
 
     @CreationTimestamp
