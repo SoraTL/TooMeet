@@ -17,6 +17,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                 "/chat-room",
                 "/chat-members",
                 "/message-reaction",
+                "/message-recall",
                 "/messages"
         );
 //        registry.setApplicationDestinationPrefixes("");

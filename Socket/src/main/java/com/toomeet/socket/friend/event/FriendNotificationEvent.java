@@ -1,10 +1,12 @@
 package com.toomeet.socket.friend.event;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
+@Builder
 public class FriendNotificationEvent {
     private Long id;
     private Sender sender;
@@ -22,6 +24,7 @@ public class FriendNotificationEvent {
     }
 
     @Data
+    @Builder
     public static class Sender {
         private Long id;
         private String avatar;
@@ -29,6 +32,7 @@ public class FriendNotificationEvent {
     }
 
     @Data
+    
     public static class Receiver {
         private Long id;
         private String avatar;

@@ -32,6 +32,9 @@ public class RabbitMqConfig {
     @Value("${spring.rabbitmq.queue.public.socket_chat_message_reaction}")
     private String socketChatMessageReaction;
 
+    @Value("${spring.rabbitmq.queue.public.socket_chat_message_recall}")
+    private String socketChatMessageRecall;
+
     // ROUTING KEY
     @Value("${spring.rabbitmq.routing.socket_new_chat_message_routing}")
     private String socketNewChatMessageRoutingKey;
@@ -44,6 +47,9 @@ public class RabbitMqConfig {
 
     @Value("${spring.rabbitmq.routing.socket_chat_message_reaction}")
     private String socketChatMessageReactionRoutingKey;
+
+    @Value("${spring.rabbitmq.routing.socket_chat_message_recall}")
+    private String socketChatMessageRecallRoutingKey;
 
     /*  QUEUE   */
     @Bean
@@ -69,6 +75,11 @@ public class RabbitMqConfig {
     @Bean
     public Queue socketChatMessageReaction() {
         return new Queue(socketChatMessageReaction);
+    }
+
+    @Bean
+    public Queue socketChatMessageRecall() {
+        return new Queue(socketChatMessageRecall);
     }
 
 
@@ -104,6 +115,13 @@ public class RabbitMqConfig {
         return BindingBuilder.bind(socketChatMessageReaction())
                 .to(socketExchange())
                 .with(socketChatMessageReactionRoutingKey);
+    }
+
+    @Bean
+    public Binding socketChatMessageReacallBinding() {
+        return BindingBuilder.bind(socketChatMessageRecall())
+                .to(socketExchange())
+                .with(socketChatMessageRecallRoutingKey);
     }
 
 

@@ -11,15 +11,15 @@ spring:
             hibernate:
                 format_sql: true
     datasource:
-        url: ${DB_HOST:jdbc:postgresql://localhost/abc}
+        url: ${DB_HOST:jdbc:postgresql://john.db.elephantsql.com/vieldwwj}
         driver-class-name: org.postgresql.Driver
-        username: ${DB_USERNAME:abc}
-        password: ${DB_PASSWORD:213213}
+        username: ${DB_USERNAME:vieldwwj}
+        password: ${DB_PASSWORD:GSdHeiYKJZ5FQ-g3XzBmWD8vpASOSl_P}
     rabbitmq:
-        host: ${RABBIT_HOST:rabbit-host}
+        host: ${RABBIT_HOST:rabbit_host}
         port: ${RABBIT_PORT:5672}
-        username: ${RABBIT_USERNAME:abcd}
-        password: ${RABBIT_PASSWORD:passsword}
+        username: ${RABBIT_USERNAME:lwejyugl}
+        password: ${RABBIT_PASSWORD:password}
         virtual-host: ${RABBIT_VHOST:lwejyugl}
         exchange:
             socket_exchange: ex_socket

@@ -28,6 +28,9 @@ public class RabbitMqConfig {
     @Value("${spring.rabbitmq.queue.subscribe.socket_chat_message_reaction}")
     private String socketChatMessageReaction;
 
+    @Value("${spring.rabbitmq.queue.subscribe.socket_chat_message_recall}")
+    private String socketChatMessageRecall;
+
     @Bean
     public Queue socketNotifyFriendQueue() {
         return new Queue(socketNotifyFriendQueue);
@@ -52,6 +55,12 @@ public class RabbitMqConfig {
     public Queue socketChatMessageReaction() {
         return new Queue(socketChatMessageReaction);
     }
+
+    @Bean
+    public Queue socketChatMessageRecall() {
+        return new Queue(socketChatMessageRecall);
+    }
+
 
     @Bean
     public AmqpTemplate amqpTemplate(final ConnectionFactory factory) {

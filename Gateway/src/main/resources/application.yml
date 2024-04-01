@@ -1,91 +1,101 @@
 server:
-    port: ${PORT:8080}
+  port: ${PORT:8080}
 spring:
-    cloud:
-        gateway:
-            globalcors:
-                cors-configurations:
-                    "[/**]":
-                        allowedOrigins: ["http://localhost:3000"]
-                        allowedHeaders: "*"
-                        allowedMethods:
-                            - GET
-                            - POST
-                            - PUT
-                            - PATCH
-                            - DELETE
-            routes:
-                #============================  Auth ============================#
-                - id: auth-route
-                  uri: ${AUTH_ROUTE:http://localhost:8082}
-                  predicates:
-                      - Path=/v1/auth/**
-                  filters:
-                      - RemoveSpecifiedHeader
-                      - StripPrefix=1
-                #============================  User ============================#
-                - id: user-route
-                  uri: ${USER_ROUTE:http://localhost:8082}
-                  predicates:
-                      - Path=/v1/users/**
-                  filters:
-                      - RemoveSpecifiedHeader
-                      - AuthorizationFilter
-                      - StripPrefix=1
-                #============================  Socket ============================#
-                - id: socket-route
-                  uri: ${SOCKET_ROUTE:http://localhost:8081}
-                  predicates:
-                      - Path=/v1/ws/**
-                  filters:
-                      - SocketAuthorizationFilter
-                      - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_UNIQUE
-                      - DedupeResponseHeader=Access-Control-Allow-Credentials, RETAIN_UNIQUE
-                      - StripPrefix=1
-                #============================ Public  Post ============================#
-                - id: post-public-route
-                  uri: ${POST_ROUTE:http://localhost:3031}
-                  predicates:
-                      - Path=/v1/posts/guest
-                  filters:
-                      - RemoveSpecifiedHeader
-                      - StripPrefix=1
-                #============================  Post ============================#
-                - id: post-route
-                  uri: ${POST_ROUTE:http://localhost:3031}
-                  predicates:
-                      - Path=/v1/posts/**
-                  filters:
-                      - RemoveSpecifiedHeader
-                      - AuthorizationFilter
-                      - StripPrefix=1
-                #============================  Notifications ============================#
-                - id: notification-route
-                  uri: ${NOTIFICATION_ROUTE:http://localhost:4002}
-                  predicates:
-                      - Path=/v1/notifications/**
-                  filters:
-                      - RemoveSpecifiedHeader
-                      - AuthorizationFilter
-                      - StripPrefix=1
-                #============================  Notifications ============================#
-                - id: group-route
-                  uri: ${GROUP_ROUTE:http://localhost:8761}
-                  predicates:
-                      - Path=/v1/group/**
-                  filters:
-                      - RemoveSpecifiedHeader
-                      - AuthorizationFilter
-                      - StripPrefix=1
-                #============================  Chat ============================#
-                - id: chat-route
-                  uri: ${CHAT_ROUTE:http://localhost:8088}
-                  predicates:
-                      - Path=/v1/chats/**
-                  filters:
-                      - RemoveSpecifiedHeader
-                      - AuthorizationFilter
-                      - StripPrefix=1
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          "[/**]":
+            allowedOrigins: "https://toomeet.vercel.app"
+            allowed-origin-patterns: "*"
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+      routes:
+
+        #============================  Auth ============================#
+        - id: auth-route
+          uri: ${AUTH_ROUTE:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - RemoveSpecifiedHeader
+            - StripPrefix=2
+        #============================  User ============================#
+        - id: user-route
+          uri: ${USER_ROUTE:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - RemoveSpecifiedHeader
+            - AuthorizationFilter
+            - StripPrefix=2
+        #============================  Socket ============================#
+        - id: socket-route
+          uri: ${SOCKET_ROUTE:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/ws/**
+          filters:
+            - SocketAuthorizationFilter
+            - DedupeResponseHeader=Access-Control-Allow-Origin, RETAIN_UNIQUE
+            - DedupeResponseHeader=Access-Control-Allow-Credentials, RETAIN_UNIQUE
+            - StripPrefix=2
+        #============================ Public  Post ============================#
+        - id: post-public-route
+          uri: ${POST_ROUTE:http://localhost:3031}
+          predicates:
+            - Path=/api/v1/posts/guest
+          filters:
+            - RemoveSpecifiedHeader
+            - StripPrefix=2
+        #============================  Post ============================#
+        - id: post-route
+          uri: ${POST_ROUTE:http://localhost:3031}
+          predicates:
+            - Path=/api/v1/posts/**
+          filters:
+            - RemoveSpecifiedHeader
+            - AuthorizationFilter
+            - StripPrefix=2
+        #============================  Notifications ============================#
+        - id: notification-route
+          uri: ${NOTIFICATION_ROUTE:http://localhost:4002}
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - RemoveSpecifiedHeader
+            - AuthorizationFilter
+            - StripPrefix=2
+        #============================  Notifications ============================#
+        - id: group-route
+          uri: ${GROUP_ROUTE:http://localhost:8761}
+          predicates:
+            - Path=/api/v1/group/**
+          filters:
+            - RemoveSpecifiedHeader
+            - AuthorizationFilter
+            - StripPrefix=2
+        #============================  Chat ============================#
+        - id: chat-route
+          uri: ${CHAT_ROUTE:http://localhost:8088}
+          predicates:
+            - Path=/api/v1/chats/**
+          filters:
+            - RemoveSpecifiedHeader
+            - AuthorizationFilter
+            - StripPrefix=2
+
+        #============================  Front end ============================#
+        - id: front-end
+          uri: ${FRONT_END:http://localhost:3000}
+          predicates:
+            - Path=/**
+
+
 
 jwt:
-    secret: ${TOKEN_SECRET:jwt-secret}
+  secret: ${TOKEN_SECRET:KqLaJQJXIfarUZFJ39BfpcWw9vyx9VMOd5SSLDIsu9ajKavYop96uOez20yCDrucd/s=}

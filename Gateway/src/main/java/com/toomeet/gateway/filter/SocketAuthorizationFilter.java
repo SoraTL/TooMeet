@@ -5,11 +5,10 @@ import com.toomeet.gateway.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.http.HttpCookie;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 @Component
 public class SocketAuthorizationFilter extends AbstractGatewayFilterFactory<SocketAuthorizationFilter.Config> {
@@ -28,8 +27,11 @@ public class SocketAuthorizationFilter extends AbstractGatewayFilterFactory<Sock
             ServerHttpRequest request = exchange.getRequest();
             ServerHttpResponse response = exchange.getResponse();
 
-            String token = Objects.requireNonNull(request.getCookies().getFirst("access_token")).getValue();
-
+            HttpCookie cookie = request.getCookies().getFirst("access_token");
+            if (cookie == null) {
+                throw new UnauthorizedException("Missing Authorization Header!");
+            }
+            String token = cookie.getValue();
 
             if (jwtService.isTokenExpired(token)) {
                 response.getHeaders().set("status", "Connect failed: Sorry, your token has expired!");

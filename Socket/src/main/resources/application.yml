@@ -3,11 +3,11 @@ server:
 
 spring:
     rabbitmq:
-        host: ${RABBIT_HOST:rabbit-host}
+        host: ${RABBIT_HOST:rabbit_host}
         port: ${RABBIT_PORT:5672}
-        username: ${RABBIT_USERNAME:rabbit}
+        username: ${RABBIT_USERNAME:lwejyugl}
         password: ${RABBIT_PASSWORD:password}
-        virtual-host: ${RABBIT_VHOST:rabbit}
+        virtual-host: ${RABBIT_VHOST:lwejyugl}
         queue:
             public:
             subscribe:
@@ -16,3 +16,4 @@ spring:
                 socket_update_chat_room: "q_socket_update_chat_room"
                 socket_chat_room_member_ship: "q_socket_chat_room_member_ship"
                 socket_chat_message_reaction: "q_socket_chat_message_reaction"
+                socket_chat_message_recall: "q_socket_chat_message_recall"

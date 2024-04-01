@@ -34,7 +34,7 @@ public class Message {
     @Enumerated(EnumType.STRING)
     private Icon icon;
 
-    @Column(length = 2000)
+    @Column(length = 50000)
     private String text;
 
     @ManyToOne

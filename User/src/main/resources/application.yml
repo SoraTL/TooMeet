@@ -4,11 +4,11 @@ spring:
     application:
         name: user-service
     rabbitmq:
-        host: ${RABBIT_HOST:abc}
+        host: ${RABBIT_HOST:rabbit_host}
         port: ${RABBIT_PORT:5672}
-        username: ${RABBIT_USERNAME:username}
+        username: ${RABBIT_USERNAME:lwejyugl}
         password: ${RABBIT_PASSWORD:password}
-        virtual-host: ${RABBIT_VHOST:username}
+        virtual-host: ${RABBIT_VHOST:lwejyugl}
         exchange:
             notify_exchange: ex_notify
             chat_exchange: ex_chat
@@ -23,7 +23,7 @@ spring:
             notify_reply_friend_request: "r_notify_reply_friend_request"
             chat_create_room: "r_chat_create_room"
     redis:
-        uri: ${REDIS_URL:redis://abc}
+        uri: ${REDIS_URL:redis://default:UGXnxZrkcZMlSizJurOYJzeyPoANxoHZ@monorail.proxy.rlwy.net:23946}
 
     jpa:
         database: postgresql
@@ -34,14 +34,14 @@ spring:
             hibernate:
                 format_sql: true
     datasource:
-        url: ${DB_HOST:jdbc:postgresql://abc}
+        url: ${DB_HOST:jdbc:postgresql://rain.db.elephantsql.com/lmwhxtrw}
         driver-class-name: org.postgresql.Driver
-        username: ${DB_USER:username}
-        password: ${DB_PASSWORD:password}
+        username: ${DB_USER:lmwhxtrw}
+        password: ${DB_PASSWORD:KS-0ThWIHn-i4JPirA4NDmkt7NgoTBhh}
     mail:
         host: ${MAIL_HOST:smtp.gmail.com}
-        username: ${MAIL_USER:abc@gmail.com}
-        password: ${MAIL_PASSWORD:app-password}
+        username: ${MAIL_USER:pikapi.anony@gmail.com}
+        password: ${MAIL_PASSWORD:password}
         port: ${MAIL_PORT:587}
         properties:
             mail:
@@ -51,7 +51,7 @@ spring:
                         enable: true
 
 jwt:
-    secret_key: ${TOKEN_SECRET_KEY:jwt-secret}
+    secret_key: ${TOKEN_SECRET_KEY:KqLaJQJXIfarUZFJ39BfpcWw9vyx9VMOd5SSLDIsu9ajKavYop96uOez20yCDrucd/s=}
     expired_time: ${TOKEN_EXPIRED_TIME:7200000 } # 2 hours
 otp:
     expired_time: ${OTP_EXPIRED_TIME:300000}

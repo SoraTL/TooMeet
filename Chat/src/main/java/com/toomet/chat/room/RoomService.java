@@ -209,12 +209,12 @@ public class RoomService {
 
         memberService.leaveRoom(userId, roomId);
 
-        if (
-                room.getType().equals(Room.RoomType.GROUP) && roomMember <= 2 ||
-                        room.getType().equals(Room.RoomType.SINGLE) && roomMember <= 1
-        ) {
-            roomRepository.delete(room);
-        }
+//        if (
+//                room.getType().equals(Room.RoomType.GROUP) && roomMember <= 2 ||
+//                        room.getType().equals(Room.RoomType.SINGLE) && roomMember <= 1
+//        ) {
+//            roomRepository.delete(room);
+//        }
 
 
         RoomMemberShipPublic roomMemberShipPublic = RoomMemberShipPublic.builder()

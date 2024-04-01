@@ -15,6 +15,7 @@ import com.toomet.chat.member.MemberService;
 import com.toomet.chat.message.dto.CreateMessageDto;
 import com.toomet.chat.message.dto.MessageResponseDto;
 import com.toomet.chat.message.pub.NewMessagePublic;
+import com.toomet.chat.message.pub.RecallMessagePublic;
 import com.toomet.chat.room.Room;
 import com.toomet.chat.room.RoomService;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +48,9 @@ public class MessageService {
 
     @Value("${spring.rabbitmq.routing.socket_new_chat_message_routing}")
     private String socketNewChatMessageRoutingKey;
+
+    @Value("${spring.rabbitmq.routing.socket_chat_message_recall}")
+    private String socketChatMessageRecallRoutingKey;
 
 
     public MessageResponseDto createMessage(Long senderId, Long roomId, CreateMessageDto dto) {
@@ -111,7 +115,11 @@ public class MessageService {
 
         messageRepository.save(message);
 
-        return MessageResponseDto.convertFromMessage(message, userId);
+        MessageResponseDto messageResponse = MessageResponseDto.convertFromMessage(message, userId);
+        RecallMessagePublic recallMessagePublic = mapper.map(messageResponse, RecallMessagePublic.class);
+        rabbitTemplate.convertAndSend(socketExchange, socketChatMessageRecallRoutingKey, recallMessagePublic);
+
+        return messageResponse;
     }
 
     private Message newMessage(Long senderId, Long roomId, CreateMessageDto dto) {
