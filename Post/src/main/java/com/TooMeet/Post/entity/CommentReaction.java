@@ -2,6 +2,7 @@ package com.TooMeet.Post.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Table
 @Getter
 @Setter
+@NoArgsConstructor
 public class CommentReaction {
 
     @Id

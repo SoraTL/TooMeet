@@ -17,15 +17,15 @@ public class User {
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
-    @RequiredArgsConstructor
-    private static class profile{
+    public static class profile{
         private Image avatar = new Image();
         private String description;
         private Format format;
     }
 
     public String getAvatar(){
-        return this.getProfile().getAvatar().getUrl();
+        if(profile==null) return null;
+        return profile.getAvatar().getUrl();
     }
 
 }

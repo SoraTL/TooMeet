@@ -1,6 +1,7 @@
 package com.TooMeet.Post.controller;
 
 
+import com.TooMeet.Post.amqp.group.AMQPService;
 import com.TooMeet.Post.entity.Comment;
 import com.TooMeet.Post.entity.CommentReaction;
 import com.TooMeet.Post.entity.Post;
@@ -10,9 +11,7 @@ import com.TooMeet.Post.repository.CommentRepository;
 import com.TooMeet.Post.repository.PostRepository;
 import com.TooMeet.Post.repository.ReactionRepository;
 import com.TooMeet.Post.request.*;
-import com.TooMeet.Post.resposn.CommentResponse;
-import com.TooMeet.Post.resposn.PostResponse;
-import com.TooMeet.Post.resposn.ReactionResponse;
+import com.TooMeet.Post.response.*;
 import com.TooMeet.Post.service.CommentService;
 import com.TooMeet.Post.service.ImageUpload;
 import com.TooMeet.Post.service.PostService;
@@ -29,10 +28,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.logging.Logger;
+import java.time.Instant;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -54,7 +51,8 @@ public class PostController {
     ReactionRepository reactionRepository;
     @Autowired
     CommentReactionRepository commentReactionRepository;
-
+    @Autowired
+    AMQPService amqpService;
 
     RestTemplate restTemplate = new RestTemplate();
 
@@ -63,24 +61,27 @@ public class PostController {
 
     private final String groupUrl = "";
 
-
-
-
-
+    //Post
     @PostMapping("")
     public ResponseEntity<PostResponse> newPost(@RequestHeader(value = "x-user-id") Long userId,
                                         @RequestParam(value = "content", required = false) String content,
                                         @RequestParam(value = "images", required = false) List<MultipartFile> images,
-                                        @RequestParam("privacy") Integer privacy,
-                                        @RequestParam(value = "groupId", required = false) Long groupId) {
+                                        @RequestParam("privacy") Integer privacy) {
         try {
             String Url= userUrl + "/users/info/" + userId.toString();
-            if  ((content == null && ( images!=null && images.get(0).isEmpty()) ) || privacy < 0 || privacy > 3 || (content!=null && content.length()>5000) || (images!=null&& images.size()>5)) {
+
+            if  ((content == null &&  images==null) || privacy < 0 || privacy > 3 ) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            if  ((content == null && (images.get(0).isEmpty() || images.isEmpty() ))) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if((content!=null && content.length()>5000) || (images!=null && images.size()>5)){
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             User user = restTemplate.getForObject(Url, User.class, userId);
+//          User user =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
             Post post = new Post();
             post.setContent(content);
+            if(content==null)post.setContent("");
             post.setPrivacy(privacy);
             post.setAuthorId(userId);
             if (images!=null && !images.get(0).isEmpty()) {
@@ -114,12 +115,58 @@ public class PostController {
         }
     }
 
+    //Share Post
+    @PostMapping("/share")
+    public ResponseEntity<PostResponse> sharePost(@RequestHeader(value = "x-user-id") Long userId,
+                                                  @RequestBody ShareModel model) {
+
+        Post originPost = postRepository.findById(model.getPostId()).orElse(null);
+        if(originPost == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        String Url1= userUrl + "/users/info/" + userId.toString();
+        String Url2= userUrl + "/users/info/" + originPost.getAuthorId();
+        User user = restTemplate.getForObject(Url2, User.class, userId);
+        User author = restTemplate.getForObject(Url2, User.class, userId);
+
+//        User user =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
+//        User author =new User(1L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
+        if(user == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        Post post = new Post();
+        post.setOriginPost(originPost);
+        post.setPrivacy(model.getPrivacy());
+        post.setContent(model.getContent());
+        if(model.getContent() == null) post.setContent("");
+
+        OriginPostResponse originPostResponse = new OriginPostResponse();
+        originPostResponse.setId(originPost.getId());
+        originPostResponse.setAuthor(new AuthorDto().convertToAuthor(user));
+        originPostResponse.setImages(originPost.getImages());
+        originPostResponse.setCreatedAt(originPost.getCreatedAt());
+        originPostResponse.setUpdatedAt(originPost.getUpdatedAt());
+
+        Post savedPost = postService.newPost(post);
+        PostResponse response = new PostResponse();
+
+        response.setOriginPost(originPostResponse);
+        response.setId(savedPost.getId());
+        response.setCreatedAt(savedPost.getCreatedAt());
+        response.setContent(savedPost.getContent());
+        response.setPrivacy(savedPost.getPrivacy());
+        response.setAuthor(new AuthorDto().convertToAuthor(author));
+        response.setUpdatedAt(savedPost.getUpdatedAt());
+        return new ResponseEntity<>(response,HttpStatus.CREATED);
+
+    }
+
     @GetMapping("")
     public ResponseEntity<Page<PostResponse>> getAll(@RequestHeader(value = "x-user-id") Long userId,
                                                      @RequestParam(defaultValue = "0") Integer page,
-                                                     @RequestParam(defaultValue = "10") Integer limit){
+                                                     @RequestParam(defaultValue = "10") Integer limit,
+                                                     @RequestParam(value = "profile",required = false) Long authorId){
         {
-
+            if(authorId!=null){
+                return new ResponseEntity<>(postService.getPostsByAuthor(page,limit,authorId,userId),HttpStatus.OK);
+            }
             Page<PostResponse> posts = postService.getPosts(page, limit,userId);
             return new ResponseEntity<>(posts, HttpStatus.OK);
         }
@@ -132,25 +179,8 @@ public class PostController {
             Pageable pageable= PageRequest.of(page,limit);
             Page<PostResponse> posts = postService.getPosts(page,limit);
             return new ResponseEntity<>(posts, HttpStatus.OK);
-
         }
     }
-
-    @PostMapping("/{id}/share") ResponseEntity<PostResponse> sharePost(@RequestHeader(value = "x-user-id") Long userId,
-                                                                       @PathVariable(value = "id") UUID postId,
-                                                                       @RequestParam(value = "content" ,required = false)String content ){
-        Post sharedPost=postRepository.findById(postId).orElse(null);
-
-        Post sharePost = new Post();
-
-        sharePost.setOriginPost(sharedPost);
-
-        return new ResponseEntity<>(HttpStatus.CREATED);
-
-
-
-    }
-
 
     @PutMapping("/{postId}")
     public ResponseEntity<Post> updatePost(@RequestHeader(value = "x-user-id") Long userId,
@@ -192,7 +222,7 @@ public class PostController {
     public ResponseEntity<String> deletePost(@RequestHeader(value = "x-user-id") Long userId,
                                              @PathVariable UUID postId) throws Exception {
 
-        if(postRepository.findById(postId).orElse(null).getAuthorId()==userId)
+        if(Objects.equals(postRepository.findById(postId).orElse(null).getAuthorId(), userId))
         {
             Post existingPost = postService.findById(postId);
             if (existingPost == null) {
@@ -210,6 +240,7 @@ public class PostController {
         else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
+    // Group Post
     @GetMapping("/group/{groupId}")
     public ResponseEntity<List<Post>> groupPosts(@RequestParam("postIds") List<UUID> postIds){
 
@@ -217,20 +248,17 @@ public class PostController {
         return new ResponseEntity<>(postService.getPostsByListId(postIds),HttpStatus.OK);
     }
 
-
     //Comment
     @PostMapping("/{id}/comments")
     public ResponseEntity<CommentResponse> comment(@RequestHeader(value = "x-user-id") Long userId,
                                            @PathVariable(value = "id") UUID postId,
                                            @RequestBody NewCommentModel commentModel){
         String Url= userUrl + "/users/info/" + userId.toString();
+        if(commentModel.getContent()==null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         Post post = postService.findById(postId);
-//        User user = restTemplate.getForObject(Url, User.class, userId);
-        User user = new User();
-        user.setId(123L);
-        user.setName("lahjkdshf");
+        User user = restTemplate.getForObject(Url, User.class, userId);
+//      //        User user =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
         if(user == null )return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-
         Comment comment = new Comment();
         comment.setContent(commentModel.getContent());
         comment.setUserId(userId);
@@ -259,15 +287,13 @@ public class PostController {
     }
 
     @PostMapping("/{id}/comments/reply")
-    public ResponseEntity<CommentResponse> replyComment(@RequestHeader(value = "x-user-id") Long userId,
+    public ResponseEntity<CommentResponse> replyComment(@RequestHeader(value = "x-user-id",required = false) Long userId,
                                                         @PathVariable(value = "id") UUID postId,
                                                         @RequestBody NewReplyModel replyModel){
         String Url= userUrl + "/users/info/" + userId.toString();
         Post post = postService.findById(postId);
-//        User user = restTemplate.getForObject(Url, User.class, userId);
-        User user = new User();
-        user.setId(123L);
-        user.setName("lahjkdshf");
+        User user = restTemplate.getForObject(Url, User.class, userId);
+//        User user =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
         if(user == null )return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Comment comment = commentRepository.findById(replyModel.getParentId()).orElse(null);
         if(comment==null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -283,6 +309,17 @@ public class PostController {
         reply.setContent(replyModel.getContent());
         reply.setUserId(userId);
         reply.setPost(post);
+
+        int level = reply.getLevel();
+
+        UUID parentId = reply.getParentId();
+        while(level>0){
+            Comment parent = commentRepository.findById(parentId).orElse(null);
+            parent.setReplyCount(parent.getReplyCount()+1);
+            commentRepository.save(parent);
+            level=parent.getLevel();
+            parentId=parent.getParentId();
+        }
 
         post.getComments().add(reply);
         post.setCommentCount(post.getCommentCount()+1);
@@ -305,7 +342,28 @@ public class PostController {
 
     }
 
-//    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/comments")
+    public ResponseEntity<String> deleteComment(@RequestHeader(value = "x-user-id",required = false) Long userId,
+                                                 @PathVariable(value = "id") UUID commentId)
+    {
+        Comment comment = commentRepository.findById(commentId).orElse(null);
+        if(comment == null){
+            return new ResponseEntity<>("Không tìm thấy comment!",HttpStatus.NOT_FOUND);
+        }
+
+
+        if(!Objects.equals(userId, comment.getUserId())){
+            return new ResponseEntity<>("Bạn không thể xóa comment này!",HttpStatus.FORBIDDEN);
+        }
+
+        if(!commentService.deleteCommentS(comment)){
+            return new ResponseEntity<>("Xóa bình luận không thành công!", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>("Xóa bình luận thành công!",HttpStatus.ACCEPTED);
+
+
+    }
 
     @GetMapping("/{id}/comments")
     public ResponseEntity<Page<CommentResponse>> getComment(
@@ -322,12 +380,11 @@ public class PostController {
         return new ResponseEntity<>(comments,HttpStatus.OK);
     }
 
-
     // Post Reaction
     @PutMapping("/{id}/reaction")
     public ResponseEntity<ReactionResponse> reaction(@RequestHeader(value = "x-user-id") Long userId,
                                                      @PathVariable("id") UUID postId,
-                                                     @RequestBody NewReactionModel reactionModel ){
+                                                     @RequestBody NewReactionModel reactionModel )  {
         ReactionResponse response = new ReactionResponse();
         if(reactionModel.getEmoji()>5 || reactionModel.getEmoji()<0) {
             response.setMassage("Emoji nằm trong khỏang 0 đến 5");
@@ -386,7 +443,6 @@ public class PostController {
         response.setMassage("Xóa tương tác thành công!");
         response.setReactionCount(post.getReactionCount());
         return new ResponseEntity<>(response,HttpStatus.OK);
-
     }
 
     //Comment Reaction
@@ -395,6 +451,7 @@ public class PostController {
                                                   @PathVariable("id") UUID commentId,
                                                   @RequestBody NewReactionModel reactionModel){
         ReactionResponse response = new ReactionResponse();
+        if(reactionModel==null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         if(reactionModel.getEmoji()>5 || reactionModel.getEmoji()<0) {
             response.setMassage("Emoji nằm trong khỏang 0 đến 5");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
@@ -426,5 +483,48 @@ public class PostController {
         response.setReactionCount(comment.getLikeCount());
         return new ResponseEntity<>(response,HttpStatus.CREATED);
     }
-    
+
+    @Transactional
+    @DeleteMapping("/{id}/commentReaction")
+    public ResponseEntity<ReactionResponse> deteleCommentReaction(@RequestHeader(value = "x-user-id") Long userId,
+                                                           @PathVariable("id") UUID commentId){
+        CommentReaction reaction=commentReactionRepository.getByCommentIdAndUserId(commentId,userId);
+        ReactionResponse response= new ReactionResponse();
+        if(reaction == null){
+            response.setMassage("Bạn chưa tương tác bài viết này!");
+            return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
+        }
+        if(!reaction.getUserId().equals(userId)){
+            response.setMassage("Bạn không thể xóa tương tác này");
+            return new ResponseEntity<>(response,HttpStatus.FORBIDDEN);
+        }
+        Comment comment = commentRepository.findById(commentId).orElse(null);
+        if(comment==null) {
+            response.setMassage("Không tìm thấy bài viết " + commentId.toString());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        }
+        reactionRepository.deleteReactionByPostIdAndUserId(commentId,userId);
+        commentRepository.save(comment);
+        response.setMassage("Xóa tương tác thành công!");
+        return new ResponseEntity<>(response,HttpStatus.OK);
+    }
+
+    @GetMapping("/groupPost")
+    public ResponseEntity<List<GroupPostResponse>> getGroupPost(@RequestHeader(value = "x-user-id") Long userId,
+                                                                @RequestParam("postId") List<UUID> postIds) {
+
+        List<GroupPostResponse> posts = postService.GetGroupPosts(postIds);
+
+        return new ResponseEntity<>(posts, HttpStatus.OK);
+    }
+
+//    @PostMapping("/groupPost")
+//    public ResponseEntity<PostResponse> newGroupPost(@RequestHeader(value = "x-user-id") Long userId,
+//                                                     @RequestParam(value = "content", required = false) String content,
+//                                                     @RequestParam(value = "images", required = false) List<MultipartFile> images,
+//                                                     @RequestParam("privacy") Integer privacy,
+//                                                     @RequestParam(value = "groupId") UUID groupId){
+//
+//    }
+
 }

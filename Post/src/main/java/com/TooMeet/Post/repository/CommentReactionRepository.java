@@ -13,6 +13,6 @@ public interface CommentReactionRepository extends JpaRepository<CommentReaction
 
     void deleteReactionByCommentIdAndUserId(UUID commentId,Long userId);
 
-    List<Long> getUserIdByCommentId(UUID commentId);
+    List<CommentReaction> findByCommentId(UUID commentId);
 
 }

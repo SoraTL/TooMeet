@@ -16,7 +16,7 @@ import java.util.UUID;
 @Table
 @Getter
 @Setter
-public class Comment {
+public class    Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -31,6 +31,9 @@ public class Comment {
     private Timestamp createdAt;
     @UpdateTimestamp
     private Timestamp updatedAt;
+    @Column(name = "reply_count")
+    private int replyCount = 0;
+
 
     @ManyToOne
     @JoinColumn(name = "post_id")

@@ -1,8 +1,7 @@
-package com.TooMeet.Post.resposn;
+package com.TooMeet.Post.response;
 
 import com.TooMeet.Post.entity.Post;
 import lombok.*;
-import org.springframework.http.StreamingHttpOutputMessage;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -21,8 +20,9 @@ public class PostResponse {
     private int emoji = -1;
     private int reactionCount;
     private int commentCount;
-    private Timestamp createAt;
-    private Timestamp updateAt;
+    private OriginPostResponse originPost;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
 
     public void convertToResponse(Post post){
         this.setId(post.getId());
@@ -31,8 +31,8 @@ public class PostResponse {
         this.setPrivacy(post.getPrivacy());
         this.setReactionCount(post.getReactionCount());
         this.setCommentCount(post.getCommentCount());
-        this.setCreateAt(post.getCreatedAt());
-        this.setUpdateAt(post.getUpdatedAt());
+        this.setCreatedAt(post.getCreatedAt());
+        this.setUpdatedAt(post.getUpdatedAt());
     }
 
 }

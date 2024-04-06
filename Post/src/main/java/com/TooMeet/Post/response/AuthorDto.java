@@ -1,7 +1,6 @@
-package com.TooMeet.Post.resposn;
+package com.TooMeet.Post.response;
 
 
-import com.TooMeet.Post.request.Image;
 import com.TooMeet.Post.request.User;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

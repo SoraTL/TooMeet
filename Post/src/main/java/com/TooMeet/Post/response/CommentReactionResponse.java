@@ -1,7 +1,7 @@
-package com.TooMeet.Post.resposn;
+package com.TooMeet.Post.response;
 
 
-import com.TooMeet.Post.request.User;
+import com.TooMeet.Post.entity.CommentReaction;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class CommentReactionResponse {
 
-    List<Long> users;
-    Integer emoji;
+    private AuthorDto user = new AuthorDto();
+    private Integer emoji;
 
 }

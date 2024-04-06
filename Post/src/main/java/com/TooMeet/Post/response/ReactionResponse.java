@@ -1,4 +1,4 @@
-package com.TooMeet.Post.resposn;
+package com.TooMeet.Post.response;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
