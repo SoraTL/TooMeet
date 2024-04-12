@@ -1,6 +1,6 @@
 package com.toomeet.user.image;
 
-import com.toomeet.user.user.Profile;
+import com.toomeet.user.user.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,12 +31,13 @@ public class Image {
     private Format format;
 
     @OneToOne
-    private Profile profile;
+    private User profile;
 
     @CreationTimestamp
-    private Date createAt;
+    private Date createdAt;
 
     @UpdateTimestamp
     private Date updatedAt;
+
 
 }

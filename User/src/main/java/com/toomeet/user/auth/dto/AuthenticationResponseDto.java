@@ -7,6 +7,6 @@ import lombok.Data;
 @Builder
 public class AuthenticationResponseDto {
     private String otpId;
-    private String profileId;
+    private String accountId;
     private Long expiredIn;
 }

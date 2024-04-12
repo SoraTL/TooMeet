@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,9 +74,9 @@ public class GlobalExceptionHandler {
 
 
     private void logException(Exception e) {
-//        log.error(e.toString());
+        log.error(Arrays.toString(e.getStackTrace()));
         log.error(e.getMessage());
-//        e.printStackTrace();
+
     }
 
 

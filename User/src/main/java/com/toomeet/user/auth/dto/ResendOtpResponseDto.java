@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder
 public class ResendOtpResponseDto {
     private String otpId;
-    private String profileId;
+    private String accountId;
     private String email;
     private Long expireIn;
 }

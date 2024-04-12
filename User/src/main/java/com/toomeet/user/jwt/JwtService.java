@@ -1,10 +1,10 @@
 package com.toomeet.user.jwt;
 
-import com.toomeet.user.user.User;
+import com.toomeet.user.auth.Account;
 
 public interface JwtService {
-    String generateToken(User user);
-    
+    String generateToken(Account account);
+
     Long getTokenExpiredTime();
 
 }

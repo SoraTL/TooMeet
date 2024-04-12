@@ -2,32 +2,24 @@ package com.toomeet.user.user;
 
 import com.toomeet.user.image.Image;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
-@Entity
 @Data
+@Builder
+@Embeddable
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class Profile {
-
-
-    @OneToOne
-    User user;
-    @Id
-    @GeneratedValue
-    private Long id;
     private Date dateOfBirth;
     private String description;
-    @OneToOne(mappedBy = "profile", cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
+    @Getter
     private Image background;
-    @OneToOne(mappedBy = "profile", cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
     private Image avatar;
+    @Enumerated(EnumType.STRING)
     private Gender gender;
-
+    
 }
