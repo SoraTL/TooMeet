@@ -22,5 +22,4 @@ public class NewGroupPostMessage {
     private List<String> images;
     private Choice status;
 
-
 }
