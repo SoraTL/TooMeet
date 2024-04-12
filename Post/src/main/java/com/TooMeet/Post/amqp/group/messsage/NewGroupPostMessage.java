@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -14,7 +16,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class NewGroupPostMessage {
 
-    private UUID postId;
-    private User postAuthor;
+    private UUID groupId;
+    private Long userId;
+    private String content;
+    private List<String> images;
+    private Choice status;
+
 
 }

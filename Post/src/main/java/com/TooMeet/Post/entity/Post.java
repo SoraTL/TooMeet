@@ -1,5 +1,6 @@
 package com.TooMeet.Post.entity;
 
+import com.TooMeet.Post.amqp.group.messsage.Choice;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -34,11 +35,12 @@ public class Post {
     private int reactionCount = 0;
     private int commentCount = 0;
     private UUID groupId;
+    private Choice status;
 
     @ManyToOne
     @JoinColumn
     private Post originPost;
-    @OneToMany(mappedBy = "originPost")
+    @OneToMany(mappedBy = "originPost",cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Post> sharedPosts = new ArrayList<>();
 

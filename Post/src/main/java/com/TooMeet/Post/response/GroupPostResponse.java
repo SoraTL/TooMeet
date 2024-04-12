@@ -1,5 +1,6 @@
 package com.TooMeet.Post.response;
 
+import com.TooMeet.Post.amqp.group.messsage.Choice;
 import com.TooMeet.Post.entity.Post;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class GroupPostResponse {
+public class GroupPostResponse{
 
     private UUID id;
     private AuthorDto author = new AuthorDto();
@@ -26,6 +27,7 @@ public class GroupPostResponse {
     private int commentCount;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private Choice status;
 
     public void convertToResponse(Post post){
         this.setId(post.getId());

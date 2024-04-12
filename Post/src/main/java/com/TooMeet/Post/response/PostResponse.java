@@ -23,6 +23,7 @@ public class PostResponse {
     private OriginPostResponse originPost;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+    private boolean isAuthor = false;
 
     public void convertToResponse(Post post){
         this.setId(post.getId());
@@ -33,6 +34,10 @@ public class PostResponse {
         this.setCommentCount(post.getCommentCount());
         this.setCreatedAt(post.getCreatedAt());
         this.setUpdatedAt(post.getUpdatedAt());
+    }
+
+    public void setIsAuthor(){
+        this.isAuthor=true;
     }
 
 }

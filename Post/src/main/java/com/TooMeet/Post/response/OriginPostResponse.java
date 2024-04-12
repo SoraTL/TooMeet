@@ -14,11 +14,12 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class OriginPostResponse {
+public class OriginPostResponse{
 
     private UUID id;
     private String content;
     private AuthorDto author;
+    private int privacy;
     private List<String> images;
     private Timestamp createdAt;
     private Timestamp updatedAt;
@@ -29,6 +30,7 @@ public class OriginPostResponse {
         setContent(post.getContent());
         setCreatedAt(post.getCreatedAt());
         setUpdatedAt(post.getUpdatedAt());
+        setPrivacy(post.getPrivacy());
         return this;
     }
 

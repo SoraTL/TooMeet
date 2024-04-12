@@ -1,5 +1,6 @@
 package com.TooMeet.Post.service;
 
+import com.TooMeet.Post.amqp.group.messsage.Choice;
 import com.TooMeet.Post.entity.Post;
 import com.TooMeet.Post.entity.Reaction;
 import com.TooMeet.Post.repository.PostRepository;
@@ -53,6 +54,7 @@ public class PostService {
         return postPage.map(post -> convertToResponse(post));
     }
 
+
     public PostResponse convertToResponse(Post post) {
         PostResponse postResponse = new PostResponse();
         postResponse.setId(post.getId());
@@ -64,7 +66,7 @@ public class PostService {
             User user = restTemplate.getForObject(userUrl, User.class);
 //            User user =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv", Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
             OriginPostResponse originPostResponse= new OriginPostResponse();
-            originPostResponse=new OriginPostResponse().convertToOriginPostResponse(post);
+            originPostResponse=new OriginPostResponse().convertToOriginPostResponse(post.getOriginPost());
             originPostResponse.setAuthor(new AuthorDto().convertToAuthor(user));
             postResponse.setOriginPost(originPostResponse);
         }
@@ -83,6 +85,7 @@ public class PostService {
 
     public PostResponse convertToResponse(Post post,Long userId){
         PostResponse postResponse = convertToResponse(post);
+        if(userId.equals(post.getAuthorId()))postResponse.setIsAuthor();
         Reaction reaction = reactionRepository.getByPostIdAndUserId(post.getId(),userId);
         if (reaction!= null){
             postResponse.setEmoji(reaction.getEmoji());
@@ -95,6 +98,18 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> postPage = postRepository.findByAuthorId(authorId,pageable);
         return  postPage.map(post -> convertToResponse(post,userId));
+    }
+
+    public Page<PostResponse> getPostsByAuthorIdAndPublic(int page, int size, Long authorId, Long userId){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Post> postPage = postRepository.findByAuthorIdAndPrivacy(authorId,0,pageable);
+        return postPage.map(post -> convertToResponse(post,userId));
+    }
+
+    public Page<PostResponse> getGroupPosts(int page, int size, Long userId,UUID groupId){
+        Pageable pageable =PageRequest.of(page,size,Sort.by("createdAt").descending());
+        Page<Post> postPage = postRepository.findByGroupIdAndStatus(groupId, Choice.accepted,pageable);
+        return postPage.map(post -> convertToResponse(post,userId));
     }
 
     public Post findById(UUID id) {
@@ -125,19 +140,5 @@ public class PostService {
         return posts;
 
     }
-
-    public List<GroupPostResponse> GetGroupPosts(List<UUID> postIds){
-        List<GroupPostResponse> resonses = new ArrayList<>();
-        for(UUID postId : postIds){
-            Post post = postRepository.findById(postId).orElse(null);
-            GroupPostResponse groupPostResonse=new GroupPostResponse();
-            if(post!=null) {
-                groupPostResonse.convertToResponse(post);
-                resonses.add(groupPostResonse);
-            }
-        }
-        return resonses;
-    }
-
 
 }

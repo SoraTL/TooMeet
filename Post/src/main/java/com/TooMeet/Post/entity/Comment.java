@@ -24,6 +24,7 @@ public class    Comment {
 
     private UUID parentId;
     private Long userId;
+    @Column(length = 5000)
     private String content;
     private int likeCount = 0;
     private int level = 0;
