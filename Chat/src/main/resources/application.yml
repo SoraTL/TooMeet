@@ -1,0 +1,53 @@
+server:
+    port: 8088
+spring:
+    application:
+        name: chat-service
+    rabbitmq:
+        host: ${RABBIT_HOST:rabbit_host}
+        port: ${RABBIT_PORT:5672}
+        username: ${RABBIT_USERNAME:lwejyugl}
+        password: ${RABBIT_PASSWORD:password}
+        virtual-host: ${RABBIT_VHOST:lwejyugl}
+        exchange:
+            socket_exchange: ex_socket
+        queue:
+            public:
+                socket_new_chat_message: "q_socket_new_chat_message"
+                socket_update_chat_room: "q_socket_update_chat_room"
+                socket_chat_room_member_ship: "q_socket_chat_room_member_ship"
+                socket_chat_message_reaction: "q_socket_chat_message_reaction"
+                socket_chat_message_recall: "q_socket_chat_message_recall"
+            subscribe:
+                chat_create_room: "q_chat_create_room"
+        routing:
+            socket_new_chat_message_routing: "r_socket_new_chat_message_routing"
+            socket_update_chat_room: "r_socket_update_chat_room_routing"
+            socket_chat_room_member_ship: "r_socket_chat_room_member_ship"
+            socket_chat_message_reaction: "r_socket_chat_message_reaction"
+            socket_chat_message_recall: "r_socket_chat_message_recall"
+    redis:
+        uri: ${REDIS_URL:redis://123}
+    jpa:
+        database: postgresql
+        show-sql: true
+        hibernate:
+            ddl-auto: update
+        properties:
+            hibernate:
+                format_sql: true
+    datasource:
+        url: ${DB_URL:jdbc:postgresql://rain.db.elephantsql.com/wezzbiwd}
+        username: ${DB_USER:wezzbiwd}
+        password: ${DB_PASSWORD:DSwy3WQugBFAU2JZbThrAq1JMzMeJR7w}
+    servlet:
+        multipart:
+            max-file-size: 8MB
+            max-request-size: 8MB
+
+jwt:
+    secret_key: ${TOKEN_SECRET_KEY:OVBknP72oOh+V4hhHL2kavst+lQTFbIbe5Z3rlxuTvDSxIqIYltIzNuFjAw4dx83qro=}
+    expired_time: ${TOKEN_EXPIRED_TIME:259200000 } # 3 days
+
+cloudinary:
+    url: ${CLOUDINARY_URL:url123}
