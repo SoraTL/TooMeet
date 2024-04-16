@@ -14,12 +14,11 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class NewGroupPostMessage {
+public class PostMessage {
 
     private UUID groupId;
     private Long userId;
     private String content;
     private List<String> images;
-    private Choice status;
 
 }

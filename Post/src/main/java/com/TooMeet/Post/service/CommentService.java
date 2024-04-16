@@ -10,6 +10,7 @@ import com.TooMeet.Post.request.User;
 import com.TooMeet.Post.response.AuthorDto;
 import com.TooMeet.Post.response.CommentReactionResponse;
 import com.TooMeet.Post.response.CommentResponse;
+import com.TooMeet.Post.response.ManageGroupPostResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -135,7 +136,7 @@ public class CommentService {
     }
 
     public Page<CommentResponse> getCommentsByParentId(UUID parentId, int page, int size, Long userId) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("updatedAt").ascending());
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Comment> commentPage = commentRepository.findByParentId(parentId, pageable);
         return commentPage.map(comment -> convertToResponse(comment,userId));
     }
@@ -168,5 +169,6 @@ public class CommentService {
             return false;
         }
     }
+
 
 }

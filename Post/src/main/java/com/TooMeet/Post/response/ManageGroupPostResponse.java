@@ -1,22 +1,26 @@
-package com.TooMeet.Post.amqp.notification.message;
+package com.TooMeet.Post.response;
 
-import com.TooMeet.Post.response.AuthorDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.xml.crypto.Data;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class NewCommentMessage {
+public class ManageGroupPostResponse {
+
     private UUID postId;
-    private AuthorDto sender;
     private AuthorDto author;
-    private UUID commentId;
-    private Date timestamp;
+    private List<String> images;
+    private String content;
+    private String status;
+    private Date createdAt;
+
 }

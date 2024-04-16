@@ -35,7 +35,7 @@ public class Post {
     private int reactionCount = 0;
     private int commentCount = 0;
     private UUID groupId;
-    private Choice status;
+    private String status;
 
     @ManyToOne
     @JoinColumn

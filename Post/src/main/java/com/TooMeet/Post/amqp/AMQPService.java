@@ -1,6 +1,5 @@
 package com.TooMeet.Post.amqp;
 
-import com.TooMeet.Post.amqp.group.messsage.NewGroupPostMessage;
 import com.TooMeet.Post.amqp.notification.message.CommentReactionMessage;
 import com.TooMeet.Post.amqp.notification.message.NewCommentMessage;
 import com.TooMeet.Post.amqp.notification.message.NewPostMessage;
@@ -67,9 +66,7 @@ public class AMQPService {
         this.amqpTemplate = amqpTemplate;
     }
 
-    public void sendNewPostMessage(NewGroupPostMessage message) {
-        amqpTemplate.convertAndSend(groupExchange,groupNewPostRouting,message);
-    }
+
 
     public void sendNotifyNewPostMessage(NewPostMessage message){
         amqpTemplate.convertAndSend(notifyExchange,notifyNewPostRouting,message);

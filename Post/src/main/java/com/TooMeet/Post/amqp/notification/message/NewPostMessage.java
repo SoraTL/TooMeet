@@ -2,6 +2,7 @@ package com.TooMeet.Post.amqp.notification.message;
 
 
 import com.TooMeet.Post.response.AuthorDto;
+import com.TooMeet.Post.response.PostResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,10 +18,8 @@ import java.util.UUID;
 @NoArgsConstructor
 public class NewPostMessage {
 
-    private UUID id;
-    private AuthorDto author;
+    private PostResponse post;
     private Type type;
-
 
     public enum Type {
         NEW,

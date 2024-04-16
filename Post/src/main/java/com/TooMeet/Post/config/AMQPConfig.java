@@ -53,6 +53,9 @@ public class AMQPConfig {
     String socketCommentCountQueue;
     @Value("${spring.rabbitmq.routing.socket_comment_count_routing}")
     String socketCommentCountRouting;
+    @Value("${spring.rabbitmq.queue.post_new_post_queue}}")
+    String postNewPostQueue;
+
 
 
     @Bean
@@ -68,6 +71,10 @@ public class AMQPConfig {
         return new TopicExchange(socketExchange);
     }
 
+    @Bean
+    public Queue postNewPostQueue(){
+        return new Queue("q_post_new_post");
+    }
 
     @Bean
     public Queue groupNewPostQueue(){

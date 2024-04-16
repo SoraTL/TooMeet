@@ -8,10 +8,7 @@ import com.TooMeet.Post.repository.ReactionRepository;
 import com.TooMeet.Post.request.Format;
 import com.TooMeet.Post.request.Image;
 import com.TooMeet.Post.request.User;
-import com.TooMeet.Post.response.AuthorDto;
-import com.TooMeet.Post.response.GroupPostResponse;
-import com.TooMeet.Post.response.OriginPostResponse;
-import com.TooMeet.Post.response.PostResponse;
+import com.TooMeet.Post.response.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -106,9 +103,9 @@ public class PostService {
         return postPage.map(post -> convertToResponse(post,userId));
     }
 
-    public Page<PostResponse> getGroupPosts(int page, int size, Long userId,UUID groupId){
+    public Page<PostResponse> getGroupPosts(int page, int size, Long userId,UUID groupId,String status){
         Pageable pageable =PageRequest.of(page,size,Sort.by("createdAt").descending());
-        Page<Post> postPage = postRepository.findByGroupIdAndStatus(groupId, Choice.accepted,pageable);
+        Page<Post> postPage = postRepository.findByGroupIdAndStatus(groupId, status,pageable);
         return postPage.map(post -> convertToResponse(post,userId));
     }
 
@@ -140,5 +137,28 @@ public class PostService {
         return posts;
 
     }
+
+    public Page<ManageGroupPostResponse> getPostsForAdmin(Long userId,UUID groupId, int page, int size){
+        Pageable pageable =PageRequest.of(page,size,Sort.by("createdAt").descending());
+        Page<Post> postPage = postRepository.findByGroupId(groupId,pageable);
+        return postPage.map(post -> convertToManageGroupPost(post,userId));
+    }
+
+    private ManageGroupPostResponse convertToManageGroupPost(Post post,Long userId){
+        String authorUrl = authorServiceUrl + "/users/info/" + post.getAuthorId();
+        User author = restTemplate.getForObject(authorUrl, User.class);
+//        User author =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv", Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
+
+        ManageGroupPostResponse response = new ManageGroupPostResponse();
+        response.setStatus(post.getStatus());
+        response.setContent(post.getContent());
+        response.setCreatedAt(post.getCreatedAt());
+        response.setPostId(post.getId());
+        response.setImages(post.getImages());
+        response.setAuthor(new AuthorDto().convertToAuthor(author));
+        return response;
+
+    }
+
 
 }

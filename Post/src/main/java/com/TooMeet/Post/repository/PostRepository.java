@@ -15,6 +15,7 @@ public interface PostRepository extends JpaRepository<Post, UUID> {
     Post findOneByAuthorId(Long authorId);
     Page<Post> findByAuthorId(Long authorId, Pageable pageable);
     Page<Post> findByAuthorIdAndPrivacy(Long authorId, int privacy, Pageable pageable);
-    Page<Post> findByGroupIdAndStatus(UUID groupId, Choice status, Pageable pageable);
+    Page<Post> findByGroupIdAndStatus(UUID groupId, String status, Pageable pageable);
+    Page<Post> findByGroupId(UUID groupId, Pageable pageable);
 
 }

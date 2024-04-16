@@ -2,6 +2,7 @@ package com.TooMeet.Post.controller;
 
 
 import com.TooMeet.Post.amqp.AMQPService;
+import com.TooMeet.Post.amqp.group.messsage.Choice;
 import com.TooMeet.Post.amqp.notification.message.CommentReactionMessage;
 import com.TooMeet.Post.amqp.notification.message.NewCommentMessage;
 import com.TooMeet.Post.amqp.notification.message.NewPostMessage;
@@ -67,7 +68,8 @@ public class PostController {
     @Value("${author.service.url}")
     private String userUrl;
 
-    private final String groupUrl = "";
+    @Value("${group.service.url}")
+    private String groupUrl;
 
     //Post
     @PostMapping("")
@@ -107,19 +109,19 @@ public class PostController {
                 post.setImages(imageUrls);
             }
             Post savedPost = postService.newPost(post);
-            if(privacy!=1){
-                message.setTimestamp(new Timestamp(System.currentTimeMillis()));
-                message.setAuthor(new AuthorDto().convertToAuthor(user));
-                message.setType(NewPostMessage.Type.NEW);
-                message.setId(savedPost.getId());
-                amqpService.sendNotifyNewPostMessage(message);
-            }
+
             PostResponse response = new PostResponse();
             response.convertToResponse(post);
             response.setImages(post.getImages());
             response.getAuthor().setId(user.getId());
             response.getAuthor().setName(user.getName());
             response.getAuthor().setAvatar(user.getAvatar());
+            if(privacy!=1){
+                message.setTimestamp(new Timestamp(System.currentTimeMillis()));
+                message.setType(NewPostMessage.Type.NEW);
+                message.setPost(response);
+                amqpService.sendNotifyNewPostMessage(message);
+            }
             return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (Exception e) {
             e.printStackTrace();
@@ -141,7 +143,6 @@ public class PostController {
 //        User author =new User(1L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
         User user = restTemplate.getForObject(Url2, User.class, userId);
         User author = restTemplate.getForObject(Url2, User.class, userId);
-        message.setAuthor(new AuthorDto().convertToAuthor(user));
         message.setTimestamp(new Timestamp(System.currentTimeMillis()));
         message.setType(NewPostMessage.Type.SHARE);
         if(user == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -165,8 +166,7 @@ public class PostController {
         List<Post> posts=originPost.getSharedPosts();
         Post savedPost=posts.get(posts.size()-1);
         PostResponse response = new PostResponse();
-        message.setId(savedPost.getId());
-        amqpService.sendNotifyNewPostMessage(message);
+
 
         response.setOriginPost(originPostResponse);
         response.setId(savedPost.getId());
@@ -175,6 +175,8 @@ public class PostController {
         response.setPrivacy(savedPost.getPrivacy());
         response.setAuthor(new AuthorDto().convertToAuthor(author));
         response.setUpdatedAt(savedPost.getUpdatedAt());
+        message.setPost(response);
+        amqpService.sendNotifyNewPostMessage(message);
         return new ResponseEntity<>(response,HttpStatus.CREATED);
 
     }
@@ -184,7 +186,6 @@ public class PostController {
                                                      @RequestParam(defaultValue = "0") Integer page,
                                                      @RequestParam(defaultValue = "10") Integer limit){
         {
-
             Page<PostResponse> posts = postService.getPosts(page, limit,userId);
             return new ResponseEntity<>(posts, HttpStatus.OK);
         }
@@ -269,27 +270,14 @@ public class PostController {
         else return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
-    // Group Post
-    @GetMapping("/group/{groupId}")
-    public ResponseEntity<List<Post>> groupPosts(@RequestParam("postIds") List<UUID> postIds){
-
-
-        return new ResponseEntity<>(postService.getPostsByListId(postIds),HttpStatus.OK);
-    }
-
     //Comment
     @PostMapping("/{id}/comments")
     public ResponseEntity<CommentResponse> comment(@RequestHeader(value = "x-user-id") Long userId,
                                            @PathVariable(value = "id") UUID postId,
                                            @RequestBody NewCommentModel commentModel){
-        String SenderUrl= userUrl + "/users/info/" + userId.toString();
-
-        NewCommentMessage message1=new NewCommentMessage();
-        SocketCommentCountMessage message2= new SocketCommentCountMessage();
-        SocketNewCommentMessage message3;
-
         if(commentModel.getContent()==null) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         Post post = postService.findById(postId);
+        String SenderUrl= userUrl + "/users/info/" + userId.toString();
         String AuthorUrl= userUrl + "/users/info/" +post.getAuthorId();
         User user = restTemplate.getForObject(SenderUrl, User.class, userId);
         User author = restTemplate.getForObject(AuthorUrl, User.class, post.getAuthorId());
@@ -308,6 +296,9 @@ public class PostController {
         postRepository.save(post);
         List<Comment> comments=post.getComments();
         Comment savedComment=comments.get(comments.size()-1);
+        NewCommentMessage message1=new NewCommentMessage();
+        SocketCommentCountMessage message2= new SocketCommentCountMessage();
+        SocketNewCommentMessage message3;
         SocketNewCommentMessage.CommentResponseForSocket socketComment = new SocketNewCommentMessage.CommentResponseForSocket(savedComment.getId(),savedComment.getContent(),new AuthorDto().convertToAuthor(user));
 
         message1.setCommentId(savedComment.getId());
@@ -316,11 +307,11 @@ public class PostController {
         message1.setTimestamp(Date.from(Instant.now()));
         message1.setSender(new AuthorDto().convertToAuthor(user));
 
-        message2.setCommentCount(post.getCommentCount());
+        message2.setCommentCount(comments.size());
         message2.setPostId(postId);
         message2.setTimestamp(Date.from(Instant.now()));
 
-        message3 = new SocketNewCommentMessage(postId,socketComment,Date.from(Instant.now()));
+        message3 = new SocketNewCommentMessage(postId,socketComment,postId,Date.from(Instant.now()));
 
         amqpService.sendNotifyNewCommentMessage(message1);
         amqpService.sendSocketCommentCountMessage(message2);
@@ -346,9 +337,12 @@ public class PostController {
     public ResponseEntity<CommentResponse> replyComment(@RequestHeader(value = "x-user-id",required = false) Long userId,
                                                         @PathVariable(value = "id") UUID postId,
                                                         @RequestBody NewReplyModel replyModel){
-        String Url= userUrl + "/users/info/" + userId.toString();
+        String SenderUrl= userUrl + "/users/info/" + userId.toString();
+        User user = restTemplate.getForObject(SenderUrl, User.class, userId);
         Post post = postService.findById(postId);
-        User user = restTemplate.getForObject(Url, User.class, userId);
+        String AuthorUrl= userUrl + "/users/info/" +post.getAuthorId();
+        User author = restTemplate.getForObject(AuthorUrl, User.class, post.getAuthorId());
+
 //        User user =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
         if(user == null )return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         Comment comment = commentRepository.findById(replyModel.getParentId()).orElse(null);
@@ -384,6 +378,27 @@ public class PostController {
         List<Comment> comments=post.getComments();
         Comment savedComment=comments.get(comments.size()-1);
 
+        NewCommentMessage message1=new NewCommentMessage();
+        SocketCommentCountMessage message2= new SocketCommentCountMessage();
+        SocketNewCommentMessage message3;
+        SocketNewCommentMessage.CommentResponseForSocket socketComment = new SocketNewCommentMessage.CommentResponseForSocket(savedComment.getId(),savedComment.getContent(),new AuthorDto().convertToAuthor(user));
+
+        message1.setCommentId(savedComment.getId());
+        message1.setPostId(postId);
+        message1.setAuthor(new AuthorDto().convertToAuthor(author));
+        message1.setTimestamp(Date.from(Instant.now()));
+        message1.setSender(new AuthorDto().convertToAuthor(user));
+
+        message2.setCommentCount(comments.size());
+        message2.setPostId(postId);
+        message2.setTimestamp(Date.from(Instant.now()));
+
+        message3 = new SocketNewCommentMessage(postId,socketComment,savedComment.getParentId(),Date.from(Instant.now()));
+
+        amqpService.sendNotifyNewCommentMessage(message1);
+        amqpService.sendSocketCommentCountMessage(message2);
+        amqpService.sendSocketNewCommentMessage(message3);
+
         CommentResponse commentResponse = new CommentResponse();
         commentResponse.setId(savedComment.getId());
         commentResponse.getAuthor().setId(userId);
@@ -417,7 +432,6 @@ public class PostController {
         }
 
         return new ResponseEntity<>("Xóa bình luận thành công!",HttpStatus.ACCEPTED);
-
 
     }
 
@@ -453,7 +467,7 @@ public class PostController {
             response.setMassage("Không tìm thấy bài viết " + postId.toString());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
-        String authorUrl= userUrl + "/users/info/" + userId.toString();
+        String authorUrl= userUrl + "/users/info/" + post.getAuthorId().toString();
         User user = restTemplate.getForObject(senderUrl, User.class, userId);
         User author = restTemplate.getForObject(authorUrl, User.class, post.getAuthorId());
 //        User user =new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG));
@@ -491,6 +505,8 @@ public class PostController {
     public ResponseEntity<ReactionResponse> deteleReaction(@RequestHeader(value = "x-user-id") Long userId,
                                  @PathVariable("id") UUID postId){
         Reaction reaction=reactionRepository.getByPostIdAndUserId(postId,userId);
+
+
         ReactionResponse response= new ReactionResponse();
         if(reaction == null){
             response.setMassage("Bạn chưa tương tác bài viết này!");
@@ -505,6 +521,12 @@ public class PostController {
             response.setMassage("Không tìm thấy bài viết " + postId.toString());
             return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
+        String authorUrl= userUrl + "/users/info/" + userId.toString();
+        String senderUrl= userUrl + "/users/info/" + userId.toString();
+        User user = restTemplate.getForObject(senderUrl, User.class, userId);
+        User author = restTemplate.getForObject(authorUrl, User.class, post.getAuthorId());
+        SocketReactionPostMessage message=new SocketReactionPostMessage(postId,reaction.getEmoji(),post.getReactionCount()-1,new Timestamp(System.currentTimeMillis()));
+        amqpService.sendSocketReactionMessage(message);
         reactionRepository.deleteReactionByPostIdAndUserId(postId,userId);
         post.setReactionCount(post.getReactionCount()-1);
         postRepository.save(post);
@@ -594,37 +616,13 @@ public class PostController {
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
 
-//    @GetMapping("/group/{groupId}")
-//    public ResponseEntity<Page<PostResponse>> getGroupPost(@RequestHeader@PathVariable("groupId") UUID groupId) {
-//
-//
-//
-//        return new ResponseEntity<>(posts, HttpStatus.OK);
-//    }
-
-//    @PostMapping("/groupPost")
-//    public ResponseEntity<PostResponse> newGroupPost(@RequestHeader(value = "x-user-id") Long userId,
-//                                                     @RequestParam(value = "content", required = false) String content,
-//                                                     @RequestParam(value = "images", required = false) List<MultipartFile> images,
-//                                                     @RequestParam("privacy") Integer privacy,
-//                                                     @RequestParam(value = "groupId") UUID groupId){
-//
-//    }
-
-    @PostMapping("/test")
-    public ResponseEntity<NewPostMessage> test(@RequestHeader(value = "x-user-id") Long userId){
-        NewPostMessage message = new NewPostMessage();
-
-        ReactionPostMessage message1 = new ReactionPostMessage();
-        message1.setPostId(UUID.randomUUID());
-        message1.setSender(new AuthorDto().convertToAuthor(new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG))));
-        message1.setEmoji(1);
-        message1.setAuthor(new AuthorDto().convertToAuthor(new User(2L,"asdfzc",new User.profile(new Image("asdzcxv",Format.JPG, Date.from(Instant.now()),Date.from(Instant.now())),"asdfz",Format.JPG))));
-        message.setType(NewPostMessage.Type.NEW);
-
-        amqpService.sendNotifyReactionMessage(message1);
-
-        return new ResponseEntity<>(message,HttpStatus.OK);
+    @GetMapping("/groupPost/{groupId}")
+    public ResponseEntity<Page<PostResponse>> getGroupPost(@RequestHeader(value = "x-user-id") Long userId,
+                                                           @PathVariable("groupId") UUID groupId,
+                                                           @RequestParam("page")int page,
+                                                           @RequestParam("limit") int limit) {
+        Page<PostResponse> posts = postService.getGroupPosts(page,limit,userId,groupId, Choice.accepted.toString());
+        return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
@@ -637,5 +635,41 @@ public class PostController {
         response.convertToResponse(post);
         return new ResponseEntity<>(response,HttpStatus.OK);
     }
+
+    @GetMapping("/group/{groupId}")
+    public ResponseEntity<Page<ManageGroupPostResponse>> getGroupPostsForAdmin(@RequestHeader(value = "x-user-id") Long userId,
+                                                                               @RequestParam(value = "page",defaultValue = "0")int page,
+                                                                               @RequestParam(value = "limit",defaultValue = "10") int limit,
+                                                                               @PathVariable("groupId") UUID groupId){
+        String group = groupUrl+"/group/checkadmin" + "?groupId=" + groupId+"&userId="+userId;
+
+        AdminRequest user = restTemplate.getForObject(group, AdminRequest.class);
+
+        if(user.getIsAdmin()==0) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+
+        Page<ManageGroupPostResponse> postResponses = postService.getPostsForAdmin(userId,groupId,page,limit);
+
+        return new ResponseEntity<>(postResponses,HttpStatus.OK);
+    }
+
+    @DeleteMapping("/groupPost")
+    public ResponseEntity<String> deleteGroupPostByAdmin(@RequestHeader(value = "x-user-id") Long userId,
+                                                         @RequestParam("postId") UUID postId,
+                                                         @RequestParam("groupId") UUID groupId){
+        String group = groupUrl+"/group/checkadmin" + "?groupId=" + groupId + "&userId="+userId;
+
+        AdminRequest user = restTemplate.getForObject(group, AdminRequest.class);
+
+        if(user.getIsAdmin()==0) return new ResponseEntity<>("Bạn không có quyền xóa bài viết trong nhóm này",HttpStatus.BAD_REQUEST);
+
+        Post post = postRepository.findById(postId).orElse(null);
+        if(post==null) return  new ResponseEntity<>("Bài viết này không tồn tại!",HttpStatus.NOT_FOUND);
+
+        postService.deletePost(postId);
+
+        return new ResponseEntity<>("Xóa bài viết thành công!",HttpStatus.OK);
+
+    }
+
 
 }

@@ -16,6 +16,7 @@ public class SocketNewCommentMessage {
 
     private UUID postId;
     private CommentResponseForSocket comment;
+    private UUID parentId;
     private Date timestamp;
 
     @Getter
